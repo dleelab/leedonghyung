@@ -8,15 +8,14 @@ Donghyung Lee <donghyung.lee@jax.org>
 
 To install leedonghyung package, start R and enter the following commands:
 
-  library(devtools)
-  devtools::install_github("dleelab/leedonghyung")
-
+      library(devtools)
+      install_github("dleelab/leedonghyung")
 
 ## Load the package
 
 To load this package, enter the following command to the R console:
 
-  library(leedonghyung)
+      library(leedonghyung)
 
 ## Disclaimer of Warranties and Liabilities
 
