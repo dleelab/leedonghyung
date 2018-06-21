@@ -9,7 +9,7 @@
 #' @return mu.z a vector of FIQT (winner's curse) adjusted association Z-scores
 #'
 
-FIQT <- function(z=z, min.p=10^-300){
+fiqt <- function(z=z, min.p=10^-300){
   pvals<-2*pnorm(abs(z),low=F)
   pvals[pvals<min.p]<- min.p
   adj.pvals<-p.adjust(pvals,method="fdr")
