@@ -7,8 +7,8 @@ navbar:
   left:
     - text: "Home"
       href: index.html
-    - text: "R function test"
-      href: functions.html
+    - text: "Test Site"
+      href: test_site.html
     - text: "License"
       href: license.html
     - text: "Github"
@@ -17,5 +17,5 @@ output:
   workflowr::wflow_html:
     toc: true
     toc_float: true
-    theme: united
+    theme: cosmo
     highlight: textmate
