@@ -1,22 +1,21 @@
-name: "leedonghyung"
+name: "R Function Factory"
 output_dir: "../docs"
 include: [".nojekyll"]
 exclude: ["include"]
 navbar:
-  title: "leedonghyung"
+  title: "R Function Factory"
   left:
     - text: "Home"
       href: index.html
-    - text: "About"
-      href: about.html
+    - text: "R function test"
+      href: functions.html
     - text: "License"
       href: license.html
-  right:
-    - icon: fa-github
-      href: https://github.com/jdblischak/workflowr
+    - text: "Github"
+      href: https://github.com/dleelab/leedonghyung
 output:
   workflowr::wflow_html:
     toc: true
-    toc_float: true
-    theme: cosmo
+    toc_float: false
+    theme: cyborg
     highlight: textmate
