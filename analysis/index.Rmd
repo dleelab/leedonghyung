@@ -1,9 +1,19 @@
 ---
-title: "Home"
+title: "Test Site"
 site: workflowr::wflow_site
 output:
   workflowr::wflow_html:
-    toc: false
+    toc: true
 ---
 
-Welcome to my research website.
+## Iteratively Adjusted Surrogate Variable Analysis (IASVA)
+* [IASVA of CD8 T cells (Kang 2017) with Modules](Analyze.PBMCs.CD8.T.iasva.html)
+
+
+## Principal Variance Component Analysis (PVCA)
+* [PVCA Test](pvca.test.html)
+
+
+## FDR Inverse Quantile Transformation (FIQT)
+* [FIQT Test](fiqt.test.html)
+
