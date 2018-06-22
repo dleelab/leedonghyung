@@ -17,5 +17,5 @@ output:
   workflowr::wflow_html:
     toc: true
     toc_float: false
-    theme: paper
+    theme: cosmo
     highlight: textmate
