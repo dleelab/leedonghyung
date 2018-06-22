@@ -7,8 +7,6 @@ navbar:
   left:
     - text: "Home"
       href: index.html
-    - text: "Test Site"
-      href: test_site.html
     - text: "License"
       href: license.html
     - text: "Github"
