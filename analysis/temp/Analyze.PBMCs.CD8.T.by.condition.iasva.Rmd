@@ -1,0 +1,495 @@
+---
+title: "Heterogeneity of CD8 T cells (Kang 2017) with Modules"
+author: "Nathan Lawlor"
+date: "5/29/2018"
+output: html_document
+---
+
+## Load packages and data
+```{r load_packages, echo=TRUE, message=FALSE}
+rm(list = ls())
+library(Seurat)
+library(iasva)
+library(SummarizedExperiment)
+library(irlba)
+library(Rtsne)
+library(RColorBrewer)
+library(pheatmap)
+library(corrplot)
+library(tmod)
+library(tagcloud)
+library(limma)
+library(VennDiagram)
+#setwd("/Users/lawlon/Documents/CZI/Seurat_Public_Data/immune_alignment_expression_matrices/")
+name <- "Kang.2017.all.cells"
+pct_cutt <- 1
+ctrl.data <- readRDS("/Users/lawlon/Documents/CZI/Seurat_Public_Data/immune_alignment_expression_matrices/immune_control_expression_matrix.Rds")
+dim(ctrl.data)
+stim.data <- readRDS("/Users/lawlon/Documents/CZI/Seurat_Public_Data/immune_alignment_expression_matrices/immune_stimulated_expression_matrix.Rds")
+dim(stim.data)
+# normalize function
+normalize <- function (counts) 
+{
+  normfactor <- colSums(counts)
+  return(t(t(counts)/normfactor)*median(normfactor))
+}
+color.vec <- c("#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "black", "#a65628", "#f781bf", "#999999")
+```
+
+## Filter genes based on over-dispersion
+```{r filter_genes, echo=TRUE, message=FALSE, eval=TRUE}
+# load in seurat annotations
+imm.comb <- readRDS("/Users/lawlon/Documents/CZI/Seurat_Public_Data/immune_alignment_expression_matrices/Seurat/Kang.2017.PBMC.stimulated.Seurat.immune.combined.Rds")
+imm.meta <- imm.comb@meta.data
+imm.meta <- cbind(imm.meta, imm.comb@ident)
+colnames(imm.meta)[ncol(imm.meta)] <- "celltype"
+dim(imm.meta)
+all.meta <- imm.meta
+imm.meta <- imm.meta[imm.meta$celltype == "CD8 T" & imm.meta$stim == "CTRL",]
+
+# Set up control object
+ctrl <- CreateSeuratObject(raw.data = ctrl.data[, rownames(imm.meta)], project = "IMMUNE_CTRL", min.cells = 5)
+ctrl@meta.data$stim <- "CTRL"
+ctrl <- FilterCells(ctrl, subset.names = "nGene", low.thresholds = 500, high.thresholds = Inf)
+ctrl <- NormalizeData(ctrl)
+ctrl <- ScaleData(ctrl, display.progress = F)
+
+# Gene selection for input to CCA
+ctrl <- FindVariableGenes(ctrl, do.plot = F)
+g.1 <- head(rownames(ctrl@hvg.info), 2000)
+genes.use <- g.1
+
+# combine data
+ctrl.data.sel <- ctrl.data[genes.use, rownames(ctrl@meta.data)]
+all.counts <- ctrl.data.sel
+dim(all.counts)
+# overdispersed genes
+#saveRDS(all.counts, file = "immune_control_stimulated_filtered_counts.Rds")
+
+```
+
+## Genes Detected (CTRL cells)
+```{r filter_data, echo=TRUE, message=FALSE, fig.width=7, fig.height=7}
+# calculate lib size
+#pdf(file = paste(name, cell_interest, "IASVA.genes.detected.hist.pdf", sep = "."))
+Num_Detected_Genes <- colSums(all.counts > 0)
+hist(Num_Detected_Genes, col = "dodgerblue4", breaks = 20, ylab = "Number of Cells")
+summ <- summary(Num_Detected_Genes)
+legend("topright", legend = paste(names(summ), summ))
+abline(v = 500, col = "red", lty = 2)
+legend("right", legend = paste("< 500 genes = ", length(which(Num_Detected_Genes < 500)), " Cells\n",
+                                  "> 500 genes = ", length(which(Num_Detected_Genes > 500)), " Cells", sep = ""))
+#dev.off()
+```
+
+## Known Factors (Ctrl Cells)
+Here, the only known factors are stimulation, celltype, and library size
+```{r known_factors, echo=TRUE, message=FALSE}
+# make vector of condition
+Condition <- factor(imm.meta$stim)
+CellType <- factor(imm.meta$celltype)
+# normalize counts
+counts.filt <- normalize(all.counts)
+Geo_Lib <- colSums(log(counts.filt+1))
+# categorize lib size
+Geo_Lib_Cat <- cut(Num_Detected_Genes, breaks = 4)
+summary(Geo_Lib)
+barplot(Geo_Lib, xlab="Cell", las=2, ylab = "Geometric Library Size")               
+lcounts <- log(counts.filt + 1)
+lcounts <- as.matrix(lcounts)
+# PC1 and Geometric library size correlation
+pc1 = irlba(lcounts - rowMeans(lcounts), 1)$v[,1] ## partial SVD
+cor(Geo_Lib, pc1)
+```
+
+## T-SNE prior to IASVA analysis
+```{r run_pre_tsne, echo=TRUE, message=FALSE, fig.width=7, fig.height=7}
+tsne.res <- Rtsne(unique(t(lcounts)), dims = 2)
+#saveRDS(tsne.res, file = paste(name, "tsne.preIASVA.Rds", sep = "."))
+
+# by celltype
+par(mar=c(5.1, 4.1, 4.1, 8.1), xpd=TRUE)
+plot(tsne.res$Y[,1:2], main="Pre IA-SVA", xlab="tSNE Dim1",
+     ylab="tSNE Dim2", pch=20, col=color.vec[CellType], 
+     bg=color.vec[CellType], cex = 0.5)
+par(xpd=TRUE)
+legend(50,20, levels(CellType), border="white", fill=color.vec, bty="n", title = "Cell Type")
+# by condition
+par(mar=c(5, 4, 4, 2), xpd=FALSE)
+plot(tsne.res$Y[,1:2], main="Pre IA-SVA", xlab="tSNE Dim1",
+     ylab="tSNE Dim2", pch=20, col=color.vec[Condition], 
+     bg=color.vec[Condition], oma=c(4,4,6,12), cex = 0.5)
+legend("topright", levels(Condition), border="white", fill=color.vec, bty="n", title = "Condition")
+# by genes detect
+plot(tsne.res$Y[,1:2], main="Pre IA-SVA", xlab="tSNE Dim1",
+     ylab="tSNE Dim2", pch=20, col=color.vec[Geo_Lib_Cat], 
+     bg=color.vec[Geo_Lib_Cat], oma=c(4,4,6,12), cex = 0.5)
+legend("topright", levels(Geo_Lib_Cat), border="white", fill=color.vec, bty="n", title = "Genes Detected")
+
+```
+
+## Run IASVA using num.sv = 10 (Ctrl cells)
+```{r run_iasva, echo=TRUE, message=FALSE}
+# run iasva
+mod <- model.matrix(~Geo_Lib)
+summ_exp <- SummarizedExperiment(assays = as.matrix(counts.filt))
+iasva.res<- fast_iasva(summ_exp, mod[,-1, drop = F], verbose=FALSE, pct.cutoff = pct_cutt, num.sv = 10)
+# load results
+iasva.sv <- iasva.res$sv
+#saveRDS(iasva.res, file = paste(name, "IASVA", pct_cutt, "output.Rds", sep = "."))
+markers_pct1 <- iasva::find_markers(Y = summ_exp, iasva.sv = iasva.sv)
+# revised find markers function
+source("/Users/lawlon/iasva_markers_update/R/find_markers.R")
+all_markers <- .GlobalEnv$find_markers(Y = summ_exp, iasva.sv = iasva.sv)
+# all_markers <- readRDS("/Users/lawlon/Documents/CZI/Seurat_Public_Data/immune_alignment_expression_matrices/IASVA/All_Cells/Kang.2017.all.cells.IASVA.by.SV.markers.Rds")
+
+#saveRDS(markers_pct1, file = paste(name, "IASVA", pct_cutt, "markers.Rds", sep = "."))
+#tsne on markers
+set.seed(100)
+if (ncol(markers_pct1) > 100) {
+  perplex <- 30
+} else {
+  perplex <- round(ncol(markers_pct1)/4)
+}
+tsne.res.iasva <- Rtsne(unique(t(log(markers_pct1+1))), dims = 2, perplexity = perplex)
+# saveRDS(tsne.res.iasva, file = paste(name, cell_interest, stim_cond, "IASVA", pct_cutt, "tsne.markers.Rds", sep = "."))
+```
+
+## Visualize SVs (Ctrl cells)
+```{r plot_svs, echo=TRUE, message=FALSE, fig.width=8, fig.height=8}
+ncol(iasva.sv)
+# if (ncol(iasva.sv) > 5) {
+#   pairs(iasva.sv[,1:5], main="IA-SVA", pch=20, col=color.vec[CellType],
+#       bg=color.vec[CellType], cex=0.5, oma=c(4,4,6,12))
+#   legend("right", levels(CellType), border="white", fill=color.vec, bty="n")
+#   pairs(iasva.sv[,1:5], main="IA-SVA", pch=20, col=color.vec[Condition],
+#       bg=color.vec[Condition], cex=0.5, oma=c(4,4,6,12))
+#   legend("right", levels(Condition), border="white", fill=color.vec, bty="n")
+#   pairs(iasva.sv[,1:5], main="IA-SVA", pch=20, col=color.vec[Geo_Lib_Cat],
+#       bg=color.vec[Geo_Lib_Cat], cex=0.5, oma=c(4,4,6,12))
+#   legend("right", levels(Geo_Lib_Cat), border="white", fill=color.vec, bty="n")
+# } else {
+  par(mar=c(5.1, 4.1, 4.1, 8.2), xpd=TRUE)
+  pairs(iasva.sv, main="IA-SVA", pch=20, col=color.vec[CellType],
+      bg=color.vec[CellType], cex=0.5, oma=c(4,4,6,12))
+  legend(0.85,0.5, levels(CellType), border="white", fill=color.vec, bty="n")
+  pairs(iasva.sv, main="IA-SVA", pch=20, col=color.vec[Condition],
+      bg=color.vec[Condition], cex=0.5, oma=c(4,4,6,12))
+  legend("right", levels(Condition), border="white", fill=color.vec, bty="n")
+  pairs(iasva.sv, main="IA-SVA", pch=20, col=color.vec[Geo_Lib_Cat],
+      bg=color.vec[Geo_Lib_Cat], cex=0.5, oma=c(4,4,6,12))
+  legend("right", levels(Geo_Lib_Cat), border="white", fill=color.vec, bty="n", title = "Genes Detected")
+  
+# }
+
+```
+
+## Correlate SVS (Ctrl cells)
+```{r corr_svs, echo=TRUE, message=FALSE, fig.width=7, fig.height=7}
+iasva_vars <- cbind(iasva.sv, Geo_Lib)
+corrplot(cor(iasva_vars))
+
+```
+
+## Modules enriched in each SV (Ctrl cells)
+```{r modules, echo=TRUE, message=FALSE, fig.width=9, fig.height=9}
+# iterative analysis of SVs an modules
+all_sv_res <- list()
+par(mfrow = c(4,2), mar = c(4,2,2,2))
+for (j in 1:ncol(iasva.sv)) {
+    sv_genes <- all_markers[[j]]
+    design <- model.matrix(~iasva.sv[,j])
+    fit <- eBayes(lmFit(counts.filt, design))
+    tt <- topTable(fit, coef=2, number=Inf, genelist = rownames(counts.filt))
+    
+    # module analysis
+    fg <- tt[sv_genes,]
+    fg.ord <- fg[order(fg$logFC, decreasing = T),]
+    res <- tmodHGtest(fg = fg.ord$ID, bg = tt$ID)
+    if (is.null(res)) {}
+    else {
+      res.ord <- res[order(res$E, decreasing = T),]
+    # append results
+    all_sv_res[[j]] <- res.ord
+    names(all_sv_res)[j] <- names(all_markers)[j]
+    if (nrow(res.ord) > 1) {
+      # make plots
+    bp1 <- barplot(res.ord$E, main = paste(names(all_markers)[j], " Module Enrichment", sep = ""), xlab = "", horiz = T,
+                  cex.main = 2, cex.lab = 2)
+    #barplot(res.ord$E, xlab = "Module Enrichment", main = paste(names(all_markers)[j], " Genes", sep = ""), horiz = T)
+    par(xpd=TRUE)
+    text(x = max(res.ord$E)/2, y = bp1[,1], labels = paste(res.ord$Title, " (", res$b, "/", res$B, ")", sep = ""), cex = 1, font = 2)
+    }
+    }
+}
+
+```
+
+## Plot All Markers (Ctrl cells)
+```{r plot_markers, echo=TRUE, message=FALSE, fig.width=7, fig.height=7, eval = TRUE}
+anno.col <- data.frame(Condition = Condition, Genes_Detect = Geo_Lib_Cat, CellType = CellType)
+rownames(anno.col) <- colnames(markers_pct1)
+# how many markers are there
+dim(markers_pct1)
+pheatmap(log(markers_pct1+1), show_colnames = FALSE, show_rownames = TRUE,
+         clustering_method = "ward.D2", fontsize_row = 10,
+         annotation_col = anno.col)
+
+```
+
+## TSNE using IASVA Marker genes (by genes detected) (Ctrl cells)
+```{r tsne_gene_detect, echo=TRUE, fig.width=7, fig.height=7}
+# load results
+par(mfrow = c(1,1))
+par(mar=c(5.1, 4.1, 4.1, 8.2), xpd=TRUE)
+plot(tsne.res.iasva$Y[,1:2], main="IA-SVA", xlab="tSNE Dim1",
+     ylab="tSNE Dim2", pch=20, col=color.vec[CellType], 
+     bg=color.vec[CellType], oma=c(4,4,6,12), cex = 0.5)
+legend(40, 20, levels(CellType), border="white", fill=color.vec, bty="n")
+par(mar=c(5, 4, 4, 2), xpd=FALSE)
+plot(tsne.res.iasva$Y[,1:2], main="IA-SVA", xlab="tSNE Dim1",
+     ylab="tSNE Dim2", pch=20, col=color.vec[Geo_Lib_Cat], 
+     bg=color.vec[Geo_Lib_Cat], oma=c(4,4,6,12), cex = 0.5)
+legend("topright", levels(Geo_Lib_Cat), border="white", fill=color.vec, bty="n", title = "Genes Detected")
+plot(tsne.res.iasva$Y[,1:2], main="IA-SVA", xlab="tSNE Dim1",
+     ylab="tSNE Dim2", pch=20, col=color.vec[Condition], 
+     bg=color.vec[Condition], oma=c(4,4,6,12), cex = 0.5)
+legend("topright", levels(Condition), border="white", fill=color.vec, bty="n")
+
+```
+
+
+## ANALYSIS with Stimulated Cells
+```{r filter_genes_stim, echo=TRUE, message=FALSE, eval=TRUE}
+# load in seurat annotations
+imm.comb <- readRDS("/Users/lawlon/Documents/CZI/Seurat_Public_Data/immune_alignment_expression_matrices/Seurat/Kang.2017.PBMC.stimulated.Seurat.immune.combined.Rds")
+imm.meta <- imm.comb@meta.data
+imm.meta <- cbind(imm.meta, imm.comb@ident)
+colnames(imm.meta)[ncol(imm.meta)] <- "celltype"
+dim(imm.meta)
+all.meta <- imm.meta
+imm.meta <- imm.meta[imm.meta$celltype == "CD8 T" & imm.meta$stim == "STIM",]
+
+# Set up control object
+stim <- CreateSeuratObject(raw.data = stim.data[, rownames(imm.meta)], project = "IMMUNE_STIM", min.cells = 5)
+stim@meta.data$stim <- "STIM"
+stim <- FilterCells(stim, subset.names = "nGene", low.thresholds = 500, high.thresholds = Inf)
+stim <- NormalizeData(stim)
+stim <- ScaleData(stim, display.progress = F)
+
+# Gene selection for input to CCA
+stim <- FindVariableGenes(stim, do.plot = F)
+g.2 <- head(rownames(stim@hvg.info), 2000)
+genes.use <- g.2
+
+# combine data
+stim.data.sel <- stim.data[genes.use, rownames(stim@meta.data)]
+all.counts <- stim.data.sel
+dim(all.counts)
+# overdispersed genes
+#saveRDS(all.counts, file = "immune_control_stimulated_filtered_counts.Rds")
+
+```
+
+## Genes Detected (STIM cells)
+```{r filter_data_stim, echo=TRUE, message=FALSE, fig.width=7, fig.height=7}
+# calculate lib size
+#pdf(file = paste(name, cell_interest, "IASVA.genes.detected.hist.pdf", sep = "."))
+Num_Detected_Genes <- colSums(all.counts > 0)
+hist(Num_Detected_Genes, col = "dodgerblue4", breaks = 20, ylab = "Number of Cells")
+summ <- summary(Num_Detected_Genes)
+legend("topright", legend = paste(names(summ), summ))
+abline(v = 500, col = "red", lty = 2)
+legend("right", legend = paste("< 500 genes = ", length(which(Num_Detected_Genes < 500)), " Cells\n",
+                                  "> 500 genes = ", length(which(Num_Detected_Genes > 500)), " Cells", sep = ""))
+#dev.off()
+```
+
+## Known Factors (STIM Cells)
+Here, the only known factors are stimulation, celltype, and library size
+```{r known_factors_stim, echo=TRUE, message=FALSE}
+# make vector of condition
+Condition <- factor(imm.meta$stim)
+CellType <- factor(imm.meta$celltype)
+# normalize counts
+counts.filt <- normalize(all.counts)
+Geo_Lib <- colSums(log(counts.filt+1))
+# categorize lib size
+Geo_Lib_Cat <- cut(Num_Detected_Genes, breaks = 4)
+summary(Geo_Lib)
+barplot(Geo_Lib, xlab="Cell", las=2, ylab = "Geometric Library Size")               
+lcounts <- log(counts.filt + 1)
+lcounts <- as.matrix(lcounts)
+# PC1 and Geometric library size correlation
+pc1 = irlba(lcounts - rowMeans(lcounts), 1)$v[,1] ## partial SVD
+cor(Geo_Lib, pc1)
+```
+
+## T-SNE prior to IASVA analysis (STIM cells)
+```{r run_pre_tsne_stim, echo=TRUE, message=FALSE, fig.width=7, fig.height=7}
+tsne.res <- Rtsne(unique(t(lcounts)), dims = 2)
+#saveRDS(tsne.res, file = paste(name, "tsne.preIASVA.Rds", sep = "."))
+
+# by celltype
+par(mar=c(5.1, 4.1, 4.1, 8.1), xpd=TRUE)
+plot(tsne.res$Y[,1:2], main="Pre IA-SVA", xlab="tSNE Dim1",
+     ylab="tSNE Dim2", pch=20, col=color.vec[CellType], 
+     bg=color.vec[CellType], cex = 0.5)
+par(xpd=TRUE)
+legend(50,20, levels(CellType), border="white", fill=color.vec, bty="n", title = "Cell Type")
+# by condition
+par(mar=c(5, 4, 4, 2), xpd=FALSE)
+plot(tsne.res$Y[,1:2], main="Pre IA-SVA", xlab="tSNE Dim1",
+     ylab="tSNE Dim2", pch=20, col=color.vec[Condition], 
+     bg=color.vec[Condition], oma=c(4,4,6,12), cex = 0.5)
+legend("topright", levels(Condition), border="white", fill=color.vec, bty="n", title = "Condition")
+# by genes detect
+plot(tsne.res$Y[,1:2], main="Pre IA-SVA", xlab="tSNE Dim1",
+     ylab="tSNE Dim2", pch=20, col=color.vec[Geo_Lib_Cat], 
+     bg=color.vec[Geo_Lib_Cat], oma=c(4,4,6,12), cex = 0.5)
+legend("topright", levels(Geo_Lib_Cat), border="white", fill=color.vec, bty="n", title = "Genes Detected")
+
+```
+
+## Run IASVA using num.sv = 10 (Stim cells)
+```{r run_iasva_stim, echo=TRUE, message=FALSE}
+# run iasva
+mod <- model.matrix(~Geo_Lib)
+summ_exp <- SummarizedExperiment(assays = as.matrix(counts.filt))
+iasva.res<- fast_iasva(summ_exp, mod[,-1, drop = F], verbose=FALSE, pct.cutoff = pct_cutt, num.sv = 10)
+# load results
+iasva.sv <- iasva.res$sv
+#saveRDS(iasva.res, file = paste(name, "IASVA", pct_cutt, "output.Rds", sep = "."))
+markers_pct1 <- iasva::find_markers(Y = summ_exp, iasva.sv = iasva.sv)
+# revised find markers function
+source("/Users/lawlon/iasva_markers_update/R/find_markers.R")
+all_markers <- .GlobalEnv$find_markers(Y = summ_exp, iasva.sv = iasva.sv)
+# all_markers <- readRDS("/Users/lawlon/Documents/CZI/Seurat_Public_Data/immune_alignment_expression_matrices/IASVA/All_Cells/Kang.2017.all.cells.IASVA.by.SV.markers.Rds")
+
+#saveRDS(markers_pct1, file = paste(name, "IASVA", pct_cutt, "markers.Rds", sep = "."))
+#tsne on markers
+set.seed(100)
+if (ncol(markers_pct1) > 100) {
+  perplex <- 30
+} else {
+  perplex <- round(ncol(markers_pct1)/4)
+}
+tsne.res.iasva <- Rtsne(unique(t(log(markers_pct1+1))), dims = 2, perplexity = perplex)
+# saveRDS(tsne.res.iasva, file = paste(name, cell_interest, stim_cond, "IASVA", pct_cutt, "tsne.markers.Rds", sep = "."))
+```
+
+## Visualize SVs (Stim cells)
+```{r plot_svs_stim, echo=TRUE, message=FALSE, fig.width=8, fig.height=8}
+ncol(iasva.sv)
+# if (ncol(iasva.sv) > 5) {
+#   pairs(iasva.sv[,1:5], main="IA-SVA", pch=20, col=color.vec[CellType],
+#       bg=color.vec[CellType], cex=0.5, oma=c(4,4,6,12))
+#   legend("right", levels(CellType), border="white", fill=color.vec, bty="n")
+#   pairs(iasva.sv[,1:5], main="IA-SVA", pch=20, col=color.vec[Condition],
+#       bg=color.vec[Condition], cex=0.5, oma=c(4,4,6,12))
+#   legend("right", levels(Condition), border="white", fill=color.vec, bty="n")
+#   pairs(iasva.sv[,1:5], main="IA-SVA", pch=20, col=color.vec[Geo_Lib_Cat],
+#       bg=color.vec[Geo_Lib_Cat], cex=0.5, oma=c(4,4,6,12))
+#   legend("right", levels(Geo_Lib_Cat), border="white", fill=color.vec, bty="n")
+# } else {
+  par(mar=c(5.1, 4.1, 4.1, 8.2), xpd=TRUE)
+  pairs(iasva.sv, main="IA-SVA", pch=20, col=color.vec[CellType],
+      bg=color.vec[CellType], cex=0.5, oma=c(4,4,6,12))
+  legend(0.85,0.5, levels(CellType), border="white", fill=color.vec, bty="n")
+  pairs(iasva.sv, main="IA-SVA", pch=20, col=color.vec[Condition],
+      bg=color.vec[Condition], cex=0.5, oma=c(4,4,6,12))
+  legend("right", levels(Condition), border="white", fill=color.vec, bty="n")
+  pairs(iasva.sv, main="IA-SVA", pch=20, col=color.vec[Geo_Lib_Cat],
+      bg=color.vec[Geo_Lib_Cat], cex=0.5, oma=c(4,4,6,12))
+  legend("right", levels(Geo_Lib_Cat), border="white", fill=color.vec, bty="n", title = "Genes Detected")
+  
+# }
+
+```
+
+## Correlate SVS (Stim cells)
+```{r corr_svs_stim, echo=TRUE, message=FALSE, fig.width=7, fig.height=7}
+iasva_vars <- cbind(iasva.sv, Geo_Lib)
+corrplot(cor(iasva_vars))
+
+```
+
+## Modules enriched in each SV (Stim cells)
+```{r modules_stim, echo=TRUE, message=FALSE, fig.width=9, fig.height=9}
+# iterative analysis of SVs an modules
+all_sv_res <- list()
+par(mfrow = c(4,2), mar = c(4,2,2,2))
+for (j in 1:ncol(iasva.sv)) {
+    sv_genes <- all_markers[[j]]
+    design <- model.matrix(~iasva.sv[,j])
+    fit <- eBayes(lmFit(counts.filt, design))
+    tt <- topTable(fit, coef=2, number=Inf, genelist = rownames(counts.filt))
+    
+    # module analysis
+    fg <- tt[sv_genes,]
+    if (nrow(fg) > 1) {
+      fg.ord <- fg[order(fg$logFC, decreasing = T),]
+    } else {
+      fg.ord <- fg
+    }
+    
+    res <- tmodHGtest(fg = fg.ord$ID, bg = tt$ID)
+    if (is.null(res)) {}
+    else {
+      res.ord <- res[order(res$E, decreasing = T),]
+    # append results
+    all_sv_res[[j]] <- res.ord
+    names(all_sv_res)[j] <- names(all_markers)[j]
+    if (nrow(res.ord) > 1) {
+      # make plots
+    bp1 <- barplot(res.ord$E, main = paste(names(all_markers)[j], " Module Enrichment", sep = ""), xlab = "", horiz = T,
+                  cex.main = 2, cex.lab = 2)
+    #barplot(res.ord$E, xlab = "Module Enrichment", main = paste(names(all_markers)[j], " Genes", sep = ""), horiz = T)
+    par(xpd=TRUE)
+    text(x = max(res.ord$E)/2, y = bp1[,1], labels = paste(res.ord$Title, " (", res$b, "/", res$B, ")", sep = ""), cex = 1, font = 2)
+    }
+    }
+    
+}
+
+```
+
+## Plot All Markers (Stim cells)
+```{r plot_markers_stim, echo=TRUE, message=FALSE, fig.width=7, fig.height=7, eval = TRUE}
+anno.col <- data.frame(Condition = Condition, Genes_Detect = Geo_Lib_Cat, CellType = CellType)
+rownames(anno.col) <- colnames(markers_pct1)
+# how many markers are there
+dim(markers_pct1)
+pheatmap(log(markers_pct1+1), show_colnames = FALSE, show_rownames = TRUE,
+         clustering_method = "ward.D2", fontsize_row = 10,
+         annotation_col = anno.col)
+
+```
+
+## TSNE using IASVA Marker genes (by genes detected) (Ctrl cells)
+```{r tsne_gene_detect_stim, echo=TRUE, fig.width=7, fig.height=7}
+# load results
+par(mfrow = c(1,1))
+par(mar=c(5.1, 4.1, 4.1, 8.2), xpd=TRUE)
+plot(tsne.res.iasva$Y[,1:2], main="IA-SVA", xlab="tSNE Dim1",
+     ylab="tSNE Dim2", pch=20, col=color.vec[CellType], 
+     bg=color.vec[CellType], oma=c(4,4,6,12), cex = 0.5)
+legend(40, 20, levels(CellType), border="white", fill=color.vec, bty="n")
+par(mar=c(5, 4, 4, 2), xpd=FALSE)
+plot(tsne.res.iasva$Y[,1:2], main="IA-SVA", xlab="tSNE Dim1",
+     ylab="tSNE Dim2", pch=20, col=color.vec[Geo_Lib_Cat], 
+     bg=color.vec[Geo_Lib_Cat], oma=c(4,4,6,12), cex = 0.5)
+legend("topright", levels(Geo_Lib_Cat), border="white", fill=color.vec, bty="n", title = "Genes Detected")
+plot(tsne.res.iasva$Y[,1:2], main="IA-SVA", xlab="tSNE Dim1",
+     ylab="tSNE Dim2", pch=20, col=color.vec[Condition], 
+     bg=color.vec[Condition], oma=c(4,4,6,12), cex = 0.5)
+legend("topright", levels(Condition), border="white", fill=color.vec, bty="n")
+
+```
+
+
+## Session Information
+```{r session_info, echo=TRUE, message=FALSE}
+sessionInfo()
+```
+
