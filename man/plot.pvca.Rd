@@ -4,7 +4,7 @@
 \alias{plot.pvca}
 \title{A function for plotting a result from the PVCA function}
 \usage{
-\method{plot}{pvca}(pvca.res, title)
+plot.pvca(pvca.res, title)
 }
 \arguments{
 \item{pvca.res}{The output from the 'pvca' function}
