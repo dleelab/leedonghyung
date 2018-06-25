@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Nathan Lawlor and Donghyung Lee" />
+
+<meta name="date" content="2018-06-25" />
+
+<title>IASVA of CD8 T cells (Kang 2017) with Modules</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cerulean.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">R Function Factory</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+<li>
+  <a href="https://github.com/dleelab/leedonghyung">Github</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">IASVA of CD8 T cells (Kang 2017) with Modules</h1>
+<h4 class="author"><em>Nathan Lawlor and Donghyung Lee</em></h4>
+<h4 class="date"><em>2018-06-25</em></h4>
+
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#load-packages">Load packages</a></li>
+<li><a href="#filter-genes-based-on-over-dispersion">Filter genes based on over-dispersion</a></li>
+<li><a href="#genes-detected">Genes Detected</a></li>
+<li><a href="#known-factors">Known Factors</a></li>
+<li><a href="#t-sne-prior-to-iasva-analysis">T-SNE prior to IASVA analysis</a></li>
+<li><a href="#run-iasva-using-num.sv-10">Run IASVA using num.sv = 10</a></li>
+<li><a href="#visualize-svs">Visualize SVs</a></li>
+<li><a href="#correlate-svs">Correlate SVS</a></li>
+<li><a href="#marker-genes-for-sv1">Marker genes for SV1</a></li>
+<li><a href="#marker-genes-for-sv4">Marker genes for SV4</a></li>
+<li><a href="#marker-genes-for-sv8">Marker genes for SV8</a></li>
+<li><a href="#marker-genes-for-sv1-and-sv4">Marker genes for SV1 and SV4</a></li>
+<li><a href="#modules-enriched-in-each-sv">Modules enriched in each SV</a></li>
+<li><a href="#differential-expression-analysis">Differential Expression Analysis</a></li>
+<li><a href="#session-information">Session Information</a></li>
+<li><a href="#session-information-1">Session information</a></li>
+</ul>
+</div>
+
+<p><strong>Last updated:</strong> 2018-06-25</p>
+<strong>workflowr checks:</strong> <small>(Click a bullet for more information)</small>
+<ul>
+<li>
+<p><details> <summary> <strong style="color:blue;">✔</strong> <strong>R Markdown file:</strong> up-to-date </summary></p>
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+</details>
+</li>
+<li>
+<p><details> <summary> <strong style="color:blue;">✔</strong> <strong>Environment:</strong> empty </summary></p>
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</details>
+</li>
+<li>
+<p><details> <summary> <strong style="color:blue;">✔</strong> <strong>Seed:</strong> <code>set.seed(20180622)</code> </summary></p>
+<p>The command <code>set.seed(20180622)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</details>
+</li>
+<li>
+<p><details> <summary> <strong style="color:blue;">✔</strong> <strong>Session information:</strong> recorded </summary></p>
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</details>
+</li>
+<li>
+<p><details> <summary> <strong style="color:blue;">✔</strong> <strong>Repository version:</strong> <a href="https://github.com/dleelab/leedonghyung/tree/1aa99e327547461a8187ad79e0cf82159f6d96e7" target="_blank">1aa99e3</a> </summary></p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility. The version displayed above was the version of the Git repository at the time these results were generated. <br><br> Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    R/.DS_Store
+    Ignored:    analysis/figure/
+
+</code></pre>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes. </details>
+</li>
+</ul>
+<details> <summary> <small><strong>Expand here to see past versions:</strong></small> </summary>
+<ul>
+<table style="border-collapse:separate; border-spacing:5px;">
+<thead>
+<tr>
+<th style="text-align:left;">
+File
+</th>
+<th style="text-align:left;">
+Version
+</th>
+<th style="text-align:left;">
+Author
+</th>
+<th style="text-align:left;">
+Date
+</th>
+<th style="text-align:left;">
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Rmd
+</td>
+<td style="text-align:left;">
+<a href="https://github.com/dleelab/leedonghyung/blob/b1ec81993cbb19e8360fa7d467438a2ab7de2b2e/analysis/Analyze.PBMCs.CD8.T.iasva.Rmd" target="_blank">b1ec819</a>
+</td>
+<td style="text-align:left;">
+dleelab
+</td>
+<td style="text-align:left;">
+2018-06-25
+</td>
+<td style="text-align:left;">
+error fixed
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Rmd
+</td>
+<td style="text-align:left;">
+<a href="https://github.com/dleelab/leedonghyung/blob/25aec94002a5803e2979829fd092018ca77c85a9/analysis/Analyze.PBMCs.CD8.T.iasva.Rmd" target="_blank">25aec94</a>
+</td>
+<td style="text-align:left;">
+dleelab
+</td>
+<td style="text-align:left;">
+2018-06-25
+</td>
+<td style="text-align:left;">
+moved
+</td>
+</tr>
+</tbody>
+</table>
+</ul>
+<p></details></p>
+<hr />
+<div id="load-packages" class="section level2">
+<h2>Load packages</h2>
+<pre class="r"><code>rm(list = ls())
+library(Seurat)
+library(leedonghyung)
+library(SummarizedExperiment)
+library(irlba)
+library(Rtsne)
+library(RColorBrewer)
+library(pheatmap)
+library(corrplot)
+library(tmod)
+library(tagcloud)
+library(limma)
+library(VennDiagram)
+library(ggrepel)
+library(data.table)
+
+# normalize function
+normalize &lt;- function (counts) 
+{
+  normfactor &lt;- colSums(counts)
+  return(t(t(counts)/normfactor)*median(normfactor))
+}
+color.vec &lt;- c(&quot;#e41a1c&quot;, &quot;#377eb8&quot;, &quot;#4daf4a&quot;, &quot;#984ea3&quot;, &quot;#ff7f00&quot;, &quot;black&quot;, &quot;#a65628&quot;, &quot;#f781bf&quot;, &quot;#999999&quot;)</code></pre>
+</div>
+<div id="filter-genes-based-on-over-dispersion" class="section level2">
+<h2>Filter genes based on over-dispersion</h2>
+<pre class="r"><code>path &lt;- (&quot;~/Dropbox/CZI_project/Public_Data/Kang_2017/&quot;)
+name &lt;- &quot;Kang.2017.all.cells&quot;
+
+ctrl.data &lt;- as.data.frame(fread(paste0(&quot;gzcat &quot;, path,&quot;immune_control_expression_matrix.txt.gz&quot;)))</code></pre>
+<pre><code>Warning in fread(paste0(&quot;gzcat &quot;, path,
+&quot;immune_control_expression_matrix.txt.gz&quot;)): Detected 13019 column names
+but the data has 13020 columns (i.e. invalid file). Added 1 extra default
+column name for the first column which is guessed to be row names or an
+index. Use setnames() afterwards if this guess is not correct, or fix the
+file write command that created the file to create a valid file.</code></pre>
+<pre class="r"><code>dim(ctrl.data)</code></pre>
+<pre><code>[1] 35635 13020</code></pre>
+<pre class="r"><code>rownames(ctrl.data) &lt;- ctrl.data$V1
+ctrl.data$V1 &lt;- NULL
+dim(ctrl.data)</code></pre>
+<pre><code>[1] 35635 13019</code></pre>
+<pre class="r"><code>#head(ctrl.data[,1:5])
+
+stim.data &lt;- as.data.frame(fread(paste0(&quot;gzcat &quot;, path,&quot;immune_stimulated_expression_matrix.txt.gz&quot;)))</code></pre>
+<pre><code>Warning in fread(paste0(&quot;gzcat &quot;, path,
+&quot;immune_stimulated_expression_matrix.txt.gz&quot;)): Detected 12875 column names
+but the data has 12876 columns (i.e. invalid file). Added 1 extra default
+column name for the first column which is guessed to be row names or an
+index. Use setnames() afterwards if this guess is not correct, or fix the
+file write command that created the file to create a valid file.</code></pre>
+<pre class="r"><code>dim(stim.data)</code></pre>
+<pre><code>[1] 35635 12876</code></pre>
+<pre class="r"><code>rownames(stim.data) &lt;- stim.data$V1
+stim.data$V1 &lt;- NULL
+dim(stim.data)</code></pre>
+<pre><code>[1] 35635 12875</code></pre>
+<pre class="r"><code>#head(stim.data[,1:5])
+
+# Set up control object
+ctrl &lt;- CreateSeuratObject(raw.data = ctrl.data, project = &quot;IMMUNE_CTRL&quot;, min.cells = 5)
+ctrl@meta.data$stim &lt;- &quot;CTRL&quot;
+ctrl &lt;- FilterCells(ctrl, subset.names = &quot;nGene&quot;, low.thresholds = 500, high.thresholds = Inf)
+ctrl &lt;- NormalizeData(ctrl)
+ctrl &lt;- ScaleData(ctrl, display.progress = F)
+# Set up stimulated object
+stim &lt;- CreateSeuratObject(raw.data = stim.data, project = &quot;IMMUNE_STIM&quot;, min.cells = 5)
+stim@meta.data$stim &lt;- &quot;STIM&quot;
+stim &lt;- FilterCells(stim, subset.names = &quot;nGene&quot;, low.thresholds = 500, high.thresholds = Inf)
+stim &lt;- NormalizeData(stim)
+stim &lt;- ScaleData(stim, display.progress = F)
+
+# Gene selection for input to CCA
+ctrl &lt;- FindVariableGenes(ctrl, do.plot = F)
+stim &lt;- FindVariableGenes(stim, do.plot = F)
+g.1 &lt;- head(rownames(ctrl@hvg.info), 2000)
+g.2 &lt;- head(rownames(stim@hvg.info), 2000)
+genes.use &lt;- union(g.1, g.2)
+
+# combine data
+ctrl.data.sel &lt;- ctrl.data[genes.use, rownames(ctrl@meta.data)]
+stim.data.sel &lt;- stim.data[genes.use, rownames(stim@meta.data)]
+all.counts &lt;- cbind(ctrl.data.sel, stim.data.sel)
+dim(all.counts)</code></pre>
+<pre><code>[1]  3161 14039</code></pre>
+<pre class="r"><code># overdispersed genes
+#saveRDS(all.counts, file = &quot;immune_control_stimulated_filtered_counts.Rds&quot;)</code></pre>
+</div>
+<div id="genes-detected" class="section level2">
+<h2>Genes Detected</h2>
+<pre class="r"><code># load data
+all.counts &lt;- readRDS(&quot;~/Dropbox/Kang.2017/IASVA/By_Celltype/Kang.2017.by.cell.CD8 T.overdispersed_raw_counts.Rds&quot;)
+dim(all.counts)</code></pre>
+<pre><code>[1] 2000  765</code></pre>
+<pre class="r"><code># load in seurat annotations
+imm.comb &lt;- readRDS(&quot;~/Dropbox/Kang.2017/Kang.2017.PBMC.stimulated.Seurat.immune.combined.Rds&quot;)
+imm.meta &lt;- imm.comb@meta.data
+imm.meta &lt;- cbind(imm.meta, imm.comb@ident)
+colnames(imm.meta)[ncol(imm.meta)] &lt;- &quot;celltype&quot;
+dim(imm.meta)</code></pre>
+<pre><code>[1] 14039     6</code></pre>
+<pre class="r"><code>all.meta &lt;- imm.meta
+imm.meta &lt;- imm.meta[imm.meta$celltype == &quot;CD8 T&quot;,]
+table(rownames(imm.meta) == colnames(all.counts))</code></pre>
+<pre><code>
+TRUE 
+ 765 </code></pre>
+<pre class="r"><code># calculate lib size
+#pdf(file = paste(name, cell_interest, &quot;IASVA.genes.detected.hist.pdf&quot;, sep = &quot;.&quot;))
+Num_Detected_Genes &lt;- colSums(all.counts &gt; 0)
+hist(Num_Detected_Genes, col = &quot;dodgerblue4&quot;, breaks = 20, ylab = &quot;Number of Cells&quot;)
+summ &lt;- summary(Num_Detected_Genes)
+legend(&quot;topright&quot;, legend = paste(names(summ), summ))
+abline(v = 500, col = &quot;red&quot;, lty = 2)
+legend(&quot;right&quot;, legend = paste(&quot;&lt; 500 genes = &quot;, length(which(Num_Detected_Genes &lt; 500)), &quot; Cells\n&quot;,
+                                  &quot;&gt; 500 genes = &quot;, length(which(Num_Detected_Genes &gt; 500)), &quot; Cells&quot;, sep = &quot;&quot;))</code></pre>
+<p><img src="figure/Analyze.PBMCs.CD8.T.iasva.Rmd/filter_data-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#dev.off()</code></pre>
+</div>
+<div id="known-factors" class="section level2">
+<h2>Known Factors</h2>
+<p>Here, the only known factors are stimulation, celltype, and library size</p>
+<pre class="r"><code># make vector of condition
+Condition &lt;- factor(imm.meta$stim)
+CellType &lt;- factor(imm.meta$celltype)
+# normalize counts
+counts.filt &lt;- normalize(all.counts)
+Geo_Lib &lt;- colSums(log(counts.filt+1))
+Num_Detected_Genes &lt;- colSums(all.counts &gt; 0)
+# categorize lib size
+Geo_Lib_Cat &lt;- cut(Num_Detected_Genes, breaks = 4)
+summary(Geo_Lib)</code></pre>
+<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  236.3   289.6   300.6   303.4   314.2   405.0 </code></pre>
+<pre class="r"><code>barplot(Geo_Lib, xlab=&quot;Cell&quot;, las=2, ylab = &quot;Geometric Library Size&quot;)               </code></pre>
+<p><img src="figure/Analyze.PBMCs.CD8.T.iasva.Rmd/known_factors-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>lcounts &lt;- log(counts.filt + 1)
+lcounts &lt;- as.matrix(lcounts)
+# PC1 and Geometric library size correlation
+pc1 = irlba(lcounts - rowMeans(lcounts), 1)$v[,1] ## partial SVD
+cor(Geo_Lib, pc1)</code></pre>
+<pre><code>[1] -0.3826994</code></pre>
+<pre class="r"><code>cor(Num_Detected_Genes, pc1)</code></pre>
+<pre><code>[1] -0.2425153</code></pre>
+<pre class="r"><code>cor(as.numeric(Condition), pc1)</code></pre>
+<pre><code>[1] -0.7981066</code></pre>
+<pre class="r"><code>cor(Num_Detected_Genes, Geo_Lib)</code></pre>
+<pre><code>[1] 0.6914553</code></pre>
+</div>
+<div id="t-sne-prior-to-iasva-analysis" class="section level2">
+<h2>T-SNE prior to IASVA analysis</h2>
+<pre class="r"><code>#tsne.res &lt;- Rtsne(unique(t(lcounts)), dims = 2)
+#saveRDS(tsne.res, file = paste(name, &quot;tsne.preIASVA.Rds&quot;, sep = &quot;.&quot;))
+
+# load tsne results
+tsne.res &lt;- readRDS(&quot;~/Dropbox/Kang.2017/IASVA/By_Celltype/Kang.2017.by.cell.CD8 T.tsne.preIASVA.Rds&quot;)
+
+# by celltype
+par(mfrow=c(2,2))
+#par(mar=c(5.1, 4.1, 4.1, 8.1), xpd=TRUE)
+plot(tsne.res$Y[,1:2], main=&quot;Pre IA-SVA&quot;, xlab=&quot;tSNE Dim1&quot;,
+     ylab=&quot;tSNE Dim2&quot;, pch=20, col=color.vec[CellType], 
+     bg=color.vec[CellType], cex = 0.5)
+#par(xpd=TRUE)
+legend(50,20, levels(CellType), border=&quot;white&quot;, fill=color.vec, bty=&quot;n&quot;, title = &quot;Cell Type&quot;)
+# by condition
+#par(mar=c(5, 4, 4, 2), xpd=FALSE)
+plot(tsne.res$Y[,1:2], main=&quot;Pre IA-SVA&quot;, xlab=&quot;tSNE Dim1&quot;,
+     ylab=&quot;tSNE Dim2&quot;, pch=20, col=color.vec[Condition], 
+     bg=color.vec[Condition], oma=c(4,4,6,12), cex = 0.5)
+legend(&quot;topleft&quot;, levels(Condition), border=&quot;white&quot;, fill=color.vec, bty=&quot;n&quot;, title = &quot;Condition&quot;)
+# by genes detect
+plot(tsne.res$Y[,1:2], main=&quot;Pre IA-SVA&quot;, xlab=&quot;tSNE Dim1&quot;,
+     ylab=&quot;tSNE Dim2&quot;, pch=20, col=color.vec[Geo_Lib_Cat], 
+     bg=color.vec[Geo_Lib_Cat], oma=c(4,4,6,12), cex = 0.5)
+legend(&quot;topleft&quot;, levels(Geo_Lib_Cat), border=&quot;white&quot;, fill=color.vec, bty=&quot;n&quot;, title = &quot;Genes Detected&quot;)</code></pre>
+<p><img src="figure/Analyze.PBMCs.CD8.T.iasva.Rmd/run_pre_tsne-1.png" width="768" style="display: block; margin: auto;" /></p>
+</div>
+<div id="run-iasva-using-num.sv-10" class="section level2">
+<h2>Run IASVA using num.sv = 10</h2>
+<pre class="r"><code># run iasva
+mod &lt;- model.matrix(~Num_Detected_Genes)
+summ_exp &lt;- SummarizedExperiment(assays = as.matrix(counts.filt))
+pct_cutt &lt;- 1
+iasva.res&lt;- fast_iasva(summ_exp, mod[,-1, drop = F], verbose=FALSE, pct.cutoff = pct_cutt, num.sv = 10)</code></pre>
+<pre><code>fast IA-SVA running...</code></pre>
+<pre><code>
+SV 1 Detected!</code></pre>
+<pre><code>
+SV 2 Detected!</code></pre>
+<pre><code>
+SV 3 Detected!</code></pre>
+<pre><code>
+SV 4 Detected!</code></pre>
+<pre><code>
+SV 5 Detected!</code></pre>
+<pre><code>
+SV 6 Detected!</code></pre>
+<pre><code>
+SV 7 Detected!</code></pre>
+<pre><code>
+SV 8 Detected!</code></pre>
+<pre><code>
+# of obtained surrogate variables: 8</code></pre>
+<pre class="r"><code># load results
+#iasva.res &lt;- readRDS(&quot;/Users/lawlon/Documents/CZI/Seurat_Public_Data/immune_alignment_expression_matrices/IASVA/By_Celltype/Kang.2017.by.cell.CD8 T.IASVA.1.output.Rds&quot;)
+iasva.sv &lt;- iasva.res$sv
+#saveRDS(iasva.res, file = paste(name, &quot;IASVA&quot;, pct_cutt, &quot;output.Rds&quot;, sep = &quot;.&quot;))
+#markers_pct1 &lt;- find_markers(Y = summ_exp, iasva.sv = iasva.sv)
+#markers_pct1 &lt;- readRDS(&quot;/Users/lawlon/Documents/CZI/Seurat_Public_Data/immune_alignment_expression_matrices/IASVA/By_Celltype/Kang.2017.by.cell.CD8 T.IASVA.1.markers.Rds&quot;)
+
+# revised find markers function
+#source(&quot;/Users/lawlon/iasva_markers_update/R/find_markers.R&quot;)
+#all_markers &lt;- .GlobalEnv$find_markers(Y = summ_exp, iasva.sv = iasva.sv)
+# all_markers &lt;- readRDS(&quot;/Users/lawlon/Documents/CZI/Seurat_Public_Data/immune_alignment_expression_matrices/IASVA/All_Cells/Kang.2017.all.cells.IASVA.by.SV.markers.Rds&quot;)
+
+#saveRDS(markers_pct1, file = paste(name, &quot;IASVA&quot;, pct_cutt, &quot;markers.Rds&quot;, sep = &quot;.&quot;))
+# tsne on markers
+# set.seed(100)
+# if (ncol(markers_pct1) &gt; 100) {
+#   perplex &lt;- 30
+# } else {
+#   perplex &lt;- round(ncol(markers_pct1)/4)
+# }
+# tsne.res.iasva &lt;- Rtsne(unique(t(log(markers_pct1+1))), dims = 2, perplexity = perplex)
+# saveRDS(tsne.res.iasva, file = paste(name, cell_interest, stim_cond, &quot;IASVA&quot;, pct_cutt, &quot;tsne.markers.Rds&quot;, sep = &quot;.&quot;))</code></pre>
+</div>
+<div id="visualize-svs" class="section level2">
+<h2>Visualize SVs</h2>
+<pre class="r"><code>ncol(iasva.sv)</code></pre>
+<pre><code>[1] 8</code></pre>
+<pre class="r"><code># if (ncol(iasva.sv) &gt; 5) {
+#   pairs(iasva.sv[,1:5], main=&quot;IA-SVA&quot;, pch=20, col=color.vec[CellType],
+#       bg=color.vec[CellType], cex=0.5, oma=c(4,4,6,12))
+#   legend(&quot;right&quot;, levels(CellType), border=&quot;white&quot;, fill=color.vec, bty=&quot;n&quot;)
+#   pairs(iasva.sv[,1:5], main=&quot;IA-SVA&quot;, pch=20, col=color.vec[Condition],
+#       bg=color.vec[Condition], cex=0.5, oma=c(4,4,6,12))
+#   legend(&quot;right&quot;, levels(Condition), border=&quot;white&quot;, fill=color.vec, bty=&quot;n&quot;)
+#   pairs(iasva.sv[,1:5], main=&quot;IA-SVA&quot;, pch=20, col=color.vec[Geo_Lib_Cat],
+#       bg=color.vec[Geo_Lib_Cat], cex=0.5, oma=c(4,4,6,12))
+#   legend(&quot;right&quot;, levels(Geo_Lib_Cat), border=&quot;white&quot;, fill=color.vec, bty=&quot;n&quot;)
+# } else {
+  par(mar=c(5.1, 4.1, 4.1, 8.2), xpd=TRUE)
+  pairs(iasva.sv, main=&quot;IA-SVA&quot;, pch=20, col=color.vec[Condition],
+      bg=color.vec[Condition], cex=0.5, oma=c(4,4,6,12))
+  legend(&quot;right&quot;, levels(Condition), border=&quot;white&quot;, fill=color.vec, bty=&quot;n&quot;)</code></pre>
+<p><img src="figure/Analyze.PBMCs.CD8.T.iasva.Rmd/plot_svs-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># }</code></pre>
+<p>Use SVs separate cells. For example, SV1, SV4, SV8 are good candidates for further analysis.</p>
+</div>
+<div id="correlate-svs" class="section level2">
+<h2>Correlate SVS</h2>
+<pre class="r"><code>iasva_vars &lt;- cbind(iasva.sv, Geo_Lib, Condition)
+corrplot(cor(iasva_vars))</code></pre>
+<p><img src="figure/Analyze.PBMCs.CD8.T.iasva.Rmd/corr_svs-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="marker-genes-for-sv1" class="section level2">
+<h2>Marker genes for SV1</h2>
+<pre class="r"><code>SV1.marker.counts &lt;- leedonghyung::find_markers(summ_exp, as.matrix(iasva.sv[,1]), rsq.cutoff=0.2)</code></pre>
+<pre><code># of markers (): 29</code></pre>
+<pre><code>total # of unique markers: 29</code></pre>
+<pre class="r"><code>dim(SV1.marker.counts)</code></pre>
+<pre><code>[1]  29 765</code></pre>
+<pre class="r"><code>anno.col &lt;- data.frame(Condition = Condition, Genes_Detect = Geo_Lib_Cat, #CellType = CellType, 
+                       SV1 = iasva.sv[,1]) #SV4= iasva.sv[,4])
+rownames(anno.col) &lt;- colnames(SV1.marker.counts)
+
+pheatmap(log(SV1.marker.counts+1), show_colnames =FALSE, 
+         clustering_method = &quot;ward.D2&quot;,cutree_cols = 3,annotation_col = anno.col)</code></pre>
+<p><img src="figure/Analyze.PBMCs.CD8.T.iasva.Rmd/SV1_markers-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>         #annotation_colors = anno.colors)</code></pre>
+</div>
+<div id="marker-genes-for-sv4" class="section level2">
+<h2>Marker genes for SV4</h2>
+<pre class="r"><code>SV4.marker.counts &lt;- leedonghyung::find_markers(summ_exp, as.matrix(iasva.sv[,4]), rsq.cutoff=0.2)</code></pre>
+<pre><code># of markers (): 21</code></pre>
+<pre><code>total # of unique markers: 21</code></pre>
+<pre class="r"><code>dim(SV4.marker.counts)</code></pre>
+<pre><code>[1]  21 765</code></pre>
+<pre class="r"><code>anno.col &lt;- data.frame(Condition = Condition, Genes_Detect = Geo_Lib_Cat, #CellType = CellType, 
+                       SV4 = iasva.sv[,4]) 
+rownames(anno.col) &lt;- colnames(SV4.marker.counts)
+
+pheatmap(log(SV4.marker.counts+1), show_colnames =FALSE, 
+         clustering_method = &quot;ward.D2&quot;,cutree_cols = 3,annotation_col = anno.col)</code></pre>
+<p><img src="figure/Analyze.PBMCs.CD8.T.iasva.Rmd/SV4_markers-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>         #annotation_colors = anno.colors)</code></pre>
+</div>
+<div id="marker-genes-for-sv8" class="section level2">
+<h2>Marker genes for SV8</h2>
+<pre class="r"><code>SV8.marker.counts &lt;- leedonghyung::find_markers(summ_exp, as.matrix(iasva.sv[,8]), rsq.cutoff=0.1)</code></pre>
+<pre><code># of markers (): 7</code></pre>
+<pre><code>total # of unique markers: 7</code></pre>
+<pre class="r"><code>dim(SV8.marker.counts)</code></pre>
+<pre><code>[1]   7 765</code></pre>
+<pre class="r"><code>anno.col &lt;- data.frame(Condition = Condition, Genes_Detect = Geo_Lib_Cat, #CellType = CellType, 
+                       SV8 = iasva.sv[,8]) 
+rownames(anno.col) &lt;- colnames(SV8.marker.counts)
+
+pheatmap(log(SV8.marker.counts+1), show_colnames =FALSE, 
+         clustering_method = &quot;ward.D2&quot;,cutree_cols = 3,annotation_col = anno.col)</code></pre>
+<p><img src="figure/Analyze.PBMCs.CD8.T.iasva.Rmd/SV8_markers-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>         #annotation_colors = anno.colors)</code></pre>
+</div>
+<div id="marker-genes-for-sv1-and-sv4" class="section level2">
+<h2>Marker genes for SV1 and SV4</h2>
+<pre class="r"><code>SV1.SV4.marker.counts &lt;- leedonghyung::find_markers(summ_exp, iasva.sv[,c(1,4)], rsq.cutoff=0.2)</code></pre>
+<pre><code># of markers (SV1): 29</code></pre>
+<pre><code># of markers (SV4): 21</code></pre>
+<pre><code>total # of unique markers: 50</code></pre>
+<pre class="r"><code>dim(SV1.SV4.marker.counts)</code></pre>
+<pre><code>[1]  50 765</code></pre>
+<pre class="r"><code>anno.col &lt;- data.frame(Condition = Condition, Genes_Detect = Geo_Lib_Cat, #CellType = CellType, 
+                       SV1 = iasva.sv[,1], SV4= iasva.sv[,4])
+rownames(anno.col) &lt;- colnames(SV1.SV4.marker.counts)
+
+pheatmap(log(SV1.SV4.marker.counts+1), show_colnames =FALSE, 
+         clustering_method = &quot;ward.D2&quot;,cutree_cols = 3,annotation_col = anno.col)</code></pre>
+<p><img src="figure/Analyze.PBMCs.CD8.T.iasva.Rmd/SV1SV4_markers-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>         #annotation_colors = anno.colors)</code></pre>
+</div>
+<div id="modules-enriched-in-each-sv" class="section level2">
+<h2>Modules enriched in each SV</h2>
+<pre class="r"><code>all_markers &lt;- find_markers2(summ_exp, iasva.sv[,c(1,4,8)], rsq.cutoff=0.1)
+
+design &lt;- model.matrix(~Condition)
+fit &lt;- eBayes(lmFit(counts.filt, design))
+tt &lt;- topTable(fit, coef=2, number=Inf, genelist = rownames(counts.filt))
+head(tt, 10)</code></pre>
+<pre><code>         ID     logFC    AveExpr        t       P.Value     adj.P.Val
+IFI6   IFI6  4.155695  2.4715532 30.86154 1.901052e-136 3.802103e-133
+ISG20 ISG20  6.166130  4.2543065 28.84359 2.344150e-124 2.344150e-121
+LY6E   LY6E  2.275560  1.4753772 22.16629  1.852983e-84  1.235322e-81
+IFIT1 IFIT1  2.263660  1.3338630 21.98045  2.280983e-83  1.140491e-80
+ISG15 ISG15  9.143282  5.6337820 21.00109  1.169060e-77  4.676239e-75
+MX1     MX1  2.161043  1.2862691 20.46429  1.474206e-74  4.914020e-72
+IFIT3 IFIT3  2.294797  1.3573009 17.79413  1.575853e-59  4.502437e-57
+MT2A   MT2A  1.394209  0.8412955 17.64957  9.741352e-59  2.435338e-56
+B2M     B2M 20.623514 59.8255245 16.74569  7.446528e-54  1.654784e-51
+OAS1   OAS1  1.141619  0.6790883 15.59160  8.555397e-48  1.711079e-45
+              B
+IFI6  300.69783
+ISG20 273.03930
+LY6E  181.72352
+IFIT1 179.22773
+ISG15 166.15724
+MX1   159.05937
+IFIT3 124.66183
+MT2A  122.85158
+B2M   111.67864
+OAS1   97.81698</code></pre>
+<pre class="r"><code># iterative analysis of SVs an modules
+all_sv_res &lt;- list()
+par(mfrow = c(3,1), mar = c(4,2,2,2))
+for (j in 1:3) {
+    sv_genes &lt;- all_markers[[j]]
+    # module analysis
+    fg &lt;- tt[sv_genes,]
+    fg.ord &lt;- fg[order(fg$logFC, decreasing = T),]
+    res &lt;- tmodHGtest(fg = fg.ord$ID, bg = tt$ID)
+    res.ord &lt;- res[order(res$E, decreasing = T),]
+    # append results
+    all_sv_res[[j]] &lt;- res.ord
+    names(all_sv_res)[j] &lt;- names(all_markers)[j]
+    if (nrow(res.ord) &gt; 1) {
+      # make plots
+    bp1 &lt;- barplot(res.ord$E, main = paste(names(all_markers)[j], &quot; Module Enrichment&quot;, sep = &quot;&quot;), xlab = &quot;&quot;, horiz = T,
+                  cex.main = 2, cex.lab = 2)
+    #barplot(res.ord$E, xlab = &quot;Module Enrichment&quot;, main = paste(names(all_markers)[j], &quot; Genes&quot;, sep = &quot;&quot;), horiz = T)
+    par(xpd=TRUE)
+    text(x = max(res.ord$E)/2, y = bp1[,1], labels = paste(res.ord$Title, &quot; (&quot;, res$b, &quot;/&quot;, res$B, &quot;)&quot;, sep = &quot;&quot;), cex = 1, font = 2)
+    }
+}</code></pre>
+<p><img src="figure/Analyze.PBMCs.CD8.T.iasva.Rmd/modules-1.png" width="768" style="display: block; margin: auto;" /></p>
+</div>
+<div id="differential-expression-analysis" class="section level2">
+<h2>Differential Expression Analysis</h2>
+<pre class="r"><code># create seurat object
+cd8_norm &lt;- imm.meta[imm.meta$celltype == &quot;CD8 T&quot; &amp; imm.meta$stim == &quot;CTRL&quot;,]
+cd8_stim &lt;- imm.meta[imm.meta$celltype == &quot;CD8 T&quot; &amp; imm.meta$stim == &quot;STIM&quot;,]
+
+cd8.norm.ids &lt;- gsub(&quot;\\.&quot;,&quot;-&quot;,rownames(cd8_norm))
+cd8.stim.ids &lt;- gsub(&quot;\\.&quot;,&quot;-&quot;,rownames(cd8_stim))
+
+all.counts.raw &lt;- cbind(ctrl.data[, cd8.norm.ids], stim.data[, cd8.stim.ids])
+all.anns &lt;- rbind(cd8_norm, cd8_stim)
+all_dat &lt;- CreateSeuratObject(raw.data = all.counts.raw, min.cells = 5, project = &quot;CD8_Cells&quot;)
+all_dat@meta.data$Stim &lt;- all.anns$stim
+all_dat &lt;- NormalizeData(all_dat)
+all_dat &lt;- ScaleData(all_dat, display.progress = F)
+# find markers
+all_dat &lt;- SetAllIdent(object = all_dat, id = &quot;Stim&quot;)
+stim_dge &lt;- FindMarkers(object = all_dat, ident.1 = &quot;STIM&quot;, ident.2 = &quot;CTRL&quot;)
+stim_dge_sig_up &lt;- stim_dge[stim_dge$p_val_adj &lt; 0.05 &amp; stim_dge$avg_logFC &gt; 0,]
+stim_dge_sig_dw &lt;- stim_dge[stim_dge$p_val_adj &lt; 0.05 &amp; stim_dge$avg_logFC &lt; 0,]
+
+## find markers based on raw data.
+summ_exp_raw &lt;- SummarizedExperiment(assays = as.matrix(all.counts.raw))
+all_markers_diff &lt;- find_markers2(summ_exp_raw, as.matrix(iasva.sv[,c(1)]), rsq.cutoff=0.1) ## For fair comparison.
+sv1_genes &lt;- all_markers_diff$All_Unique_Markers
+length(sv1_genes)</code></pre>
+<pre><code>[1] 62</code></pre>
+<pre class="r"><code># venn diagram of iasva markers
+library(gtools)
+# calc fold change of iasva markers (SV1)
+dat_norm &lt;- as.matrix(all_dat@data)
+dat_norm_ctrl &lt;- dat_norm[, cd8.norm.ids]
+dat_norm_stim &lt;- dat_norm[, cd8.stim.ids]
+sv1_fc &lt;- NULL
+for (k in 1:length(sv1_genes)) {
+  fcs &lt;- foldchange(num = mean(dat_norm_stim[sv1_genes[k],]), denom = mean(dat_norm_ctrl[sv1_genes[k],]))
+  sv1_fc &lt;- c(sv1_fc, fcs)
+}
+logfc &lt;- log2(sv1_fc)
+length(which(logfc &gt; 0))</code></pre>
+<pre><code>[1] 62</code></pre>
+<pre class="r"><code>int_genes &lt;- intersect(sv1_genes, rownames(stim_dge_sig_up))
+grid.newpage()
+draw.pairwise.venn(area1 = nrow(stim_dge_sig_up), area2 = length(sv1_genes),
+                   cross.area = length(int_genes), category = c(&quot;Differential Expression (Wilcox)&quot;, &quot;IA-SVA&quot;),
+                   cat.cex = 2, cex = 3, cat.pos = 0)</code></pre>
+<p><img src="figure/Analyze.PBMCs.CD8.T.iasva.Rmd/diff_exp-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>(polygon[GRID.polygon.119], polygon[GRID.polygon.120], polygon[GRID.polygon.121], polygon[GRID.polygon.122], text[GRID.text.123], text[GRID.text.124], text[GRID.text.125], text[GRID.text.126]) </code></pre>
+<pre class="r"><code># gene list
+int_genes</code></pre>
+<pre><code> [1] &quot;ISG15&quot;   &quot;IFI6&quot;    &quot;IFI44L&quot;  &quot;IFI44&quot;   &quot;GBP1&quot;    &quot;IFI16&quot;   &quot;CMPK2&quot;  
+ [8] &quot;RSAD2&quot;   &quot;EIF2AK2&quot; &quot;TMSB10&quot;  &quot;NMI&quot;     &quot;IFIH1&quot;   &quot;STAT1&quot;   &quot;SP110&quot;  
+[15] &quot;PLSCR1&quot;  &quot;TNFSF10&quot; &quot;RTP4&quot;    &quot;CD38&quot;    &quot;LAP3&quot;    &quot;PPM1K&quot;   &quot;HERC5&quot;  
+[22] &quot;HLA-C&quot;   &quot;HLA-B&quot;   &quot;PSMB9&quot;   &quot;DYNLT1&quot;  &quot;CHST12&quot;  &quot;NT5C3A&quot;  &quot;SAMD9&quot;  
+[29] &quot;SAMD9L&quot;  &quot;SAT1&quot;    &quot;LY6E&quot;    &quot;DDX58&quot;   &quot;PRF1&quot;    &quot;IFIT2&quot;   &quot;IFIT3&quot;  
+[36] &quot;IFIT1&quot;   &quot;IFITM2&quot;  &quot;IFITM3&quot;  &quot;IRF7&quot;    &quot;TRIM22&quot;  &quot;UBE2L6&quot;  &quot;RARRES3&quot;
+[43] &quot;DRAP1&quot;   &quot;CARD16&quot;  &quot;LAG3&quot;    &quot;OAS1&quot;    &quot;OAS3&quot;    &quot;OASL&quot;    &quot;EPSTI1&quot; 
+[50] &quot;PSME2&quot;   &quot;B2M&quot;     &quot;ISG20&quot;   &quot;MT2A&quot;    &quot;XAF1&quot;    &quot;IFI35&quot;   &quot;RNF213&quot; 
+[57] &quot;MYL12A&quot;  &quot;RBCK1&quot;   &quot;BST2&quot;    &quot;TYMP&quot;    &quot;MX2&quot;     &quot;MX1&quot;    </code></pre>
+<pre class="r"><code># make a scatterplot
+avg.exp &lt;- log1p(AverageExpression(all_dat, show.progress = FALSE))
+avg.exp$gene &lt;- rownames(avg.exp)
+genes.to.label1 = sv1_genes
+# label only a few items
+avg.exp$labelint &lt;- &quot;&quot;
+avg.exp$up &lt;- &quot;&quot;
+ix_label &lt;- which(avg.exp$gene %in% genes.to.label1)
+avg.exp$labelint[ix_label] &lt;- avg.exp$gene[ix_label]
+ix_up &lt;- which(avg.exp$gene %in% rownames(stim_dge_sig_up))
+avg.exp$up[ix_up] &lt;- avg.exp$gene[ix_up]
+# character vector of colors
+delta_colz &lt;- character(length = nrow(avg.exp))
+for (k in 1:nrow(avg.exp)) {
+  if (avg.exp$labelint[k] != &quot;&quot;) {
+    delta_colz[k] &lt;- &quot;red&quot;
+  } else if (avg.exp$up[k] != &quot;&quot;) {
+    delta_colz[k] &lt;- &quot;blue&quot;
+  } else {
+    delta_colz[k] &lt;- &quot;grey50&quot;
+  }
+}
+
+p3 &lt;- ggplot(avg.exp, aes(CTRL, STIM)) + geom_point() + ggtitle(&quot;CD8 T Cells&quot;) +
+  geom_point(color = delta_colz) +
+  geom_text_repel(aes(label = labelint), size=2, show.legend = F, nudge_x = -0.5) + 
+  annotate(&quot;text&quot;, x = 3, y = 6, label = paste(&quot;IA-SVA and DGE Genes (&quot;, length(int_genes), &quot;)&quot;, sep = &quot;&quot;), color = &quot;red&quot;) + 
+  annotate(&quot;text&quot;, x = 3, y = 5.5, label = paste(&quot;DGE Genes Only (&quot;, nrow(stim_dge_sig_up)-length(int_genes), &quot;)&quot;, sep = &quot;&quot;), color = &quot;blue&quot;)
+  #geom_text_repel(aes(label = up), size=2, show.legend = F, nudge_x = 0.5) 
+plot(p3)</code></pre>
+<p><img src="figure/Analyze.PBMCs.CD8.T.iasva.Rmd/diff_exp-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="session-information" class="section level2">
+<h2>Session Information</h2>
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.5.0 (2018-04-23)
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Running under: macOS Sierra 10.12.6
+
+Matrix products: default
+BLAS: /Library/Frameworks/R.framework/Versions/3.5/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/3.5/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+ [1] grid      parallel  stats4    stats     graphics  grDevices utils    
+ [8] datasets  methods   base     
+
+other attached packages:
+ [1] gtools_3.5.0                data.table_1.11.4          
+ [3] ggrepel_0.8.0               VennDiagram_1.6.20         
+ [5] futile.logger_1.4.3         limma_3.36.2               
+ [7] tagcloud_0.6                Rcpp_0.12.17               
+ [9] tmod_0.36                   corrplot_0.84              
+[11] pheatmap_1.0.10             RColorBrewer_1.1-2         
+[13] Rtsne_0.13                  irlba_2.3.2                
+[15] SummarizedExperiment_1.10.1 DelayedArray_0.6.1         
+[17] BiocParallel_1.14.1         matrixStats_0.53.1         
+[19] Biobase_2.40.0              GenomicRanges_1.32.3       
+[21] GenomeInfoDb_1.16.0         IRanges_2.14.10            
+[23] S4Vectors_0.18.3            BiocGenerics_0.26.0        
+[25] leedonghyung_1.0            Seurat_2.3.2               
+[27] Matrix_1.2-14               cowplot_0.9.2              
+[29] ggplot2_2.2.1.9000         
+
+loaded via a namespace (and not attached):
+  [1] reticulate_1.8         R.utils_2.6.0          tidyselect_0.2.4      
+  [4] htmlwidgets_1.2        trimcluster_0.1-2      ranger_0.10.1         
+  [7] munsell_0.4.3          codetools_0.2-15       ica_1.0-2             
+ [10] withr_2.1.2            colorspace_1.3-2       knitr_1.20            
+ [13] rstudioapi_0.7         geometry_0.3-6         ROCR_1.0-7            
+ [16] robustbase_0.93-0      dtw_1.20-1             dimRed_0.1.0          
+ [19] labeling_0.3           lars_1.2               git2r_0.21.0          
+ [22] GenomeInfoDbData_1.1.0 mnormt_1.5-5           bit64_0.9-7           
+ [25] rprojroot_1.3-2        lambda.r_1.2.3         ipred_0.9-6           
+ [28] diptest_0.75-7         R6_2.2.2               VGAM_1.0-5            
+ [31] hdf5r_1.0.0            flexmix_2.3-14         DRR_0.0.3             
+ [34] bitops_1.0-6           assertthat_0.2.0       SDMTools_1.1-221      
+ [37] scales_0.5.0           nnet_7.3-12            beeswarm_0.2.3        
+ [40] gtable_0.2.0           ddalpha_1.3.3          workflowr_1.0.1       
+ [43] timeDate_3043.102      rlang_0.2.1            CVST_0.2-2            
+ [46] scatterplot3d_0.3-41   RcppRoll_0.3.0         splines_3.5.0         
+ [49] lazyeval_0.2.1         ModelMetrics_1.1.0     acepack_1.4.1         
+ [52] plotwidgets_0.4        broom_0.4.4            checkmate_1.8.5       
+ [55] yaml_2.1.19            reshape2_1.4.3         abind_1.4-5           
+ [58] backports_1.1.2        Hmisc_4.1-1            caret_6.0-80          
+ [61] tools_3.5.0            lava_1.6.1             psych_1.8.4           
+ [64] gplots_3.0.1           proxy_0.4-22           ggridges_0.5.0        
+ [67] plyr_1.8.4             base64enc_0.1-3        zlibbioc_1.26.0       
+ [70] purrr_0.2.5            RCurl_1.95-4.10        rpart_4.1-13          
+ [73] pbapply_1.3-4          zoo_1.8-2              sfsmisc_1.1-2         
+ [76] cluster_2.0.7-1        magrittr_1.5           futile.options_1.0.1  
+ [79] lmtest_0.9-36          RANN_2.5.1             mvtnorm_1.0-8         
+ [82] whisker_0.3-2          fitdistrplus_1.0-9     evaluate_0.10.1       
+ [85] XML_3.98-1.11          mclust_5.4             gridExtra_2.3         
+ [88] compiler_3.5.0         tibble_1.4.2           KernSmooth_2.23-15    
+ [91] R.oo_1.22.0            htmltools_0.3.6        segmented_0.5-3.0     
+ [94] Formula_1.2-3          snow_0.4-2             tidyr_0.8.1           
+ [97] tclust_1.4-1           lubridate_1.7.4        formatR_1.5           
+[100] diffusionMap_1.1-0     magic_1.5-8            MASS_7.3-50           
+[103] fpc_2.1-11             R.methodsS3_1.7.1      gdata_2.18.0          
+[106] metap_0.9              bindr_0.1.1            gower_0.1.2           
+[109] igraph_1.2.1           pkgconfig_2.0.1        foreign_0.8-70        
+[112] recipes_0.1.3          foreach_1.4.4          XVector_0.20.0        
+[115] prodlim_2018.04.18     stringr_1.3.1          digest_0.6.15         
+[118] pls_2.6-0              tsne_0.1-3             rmarkdown_1.9         
+[121] htmlTable_1.12         kernlab_0.9-26         modeltools_0.2-21     
+[124] nlme_3.1-137           jsonlite_1.5           bindrcpp_0.2.2        
+[127] pillar_1.2.3           lattice_0.20-35        DEoptimR_1.0-8        
+[130] survival_2.42-3        glue_1.2.0             FNN_1.1               
+[133] png_0.1-7              prabclus_2.2-6         iterators_1.0.9       
+[136] bit_1.1-14             class_7.3-14           stringi_1.2.2         
+[139] mixtools_1.1.0         doSNOW_1.0.16          latticeExtra_0.6-28   
+[142] caTools_1.17.1         dplyr_0.7.5            ape_5.1               </code></pre>
+</div>
+<div id="session-information-1" class="section level2">
+<h2>Session information</h2>
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.5.0 (2018-04-23)
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Running under: macOS Sierra 10.12.6
+
+Matrix products: default
+BLAS: /Library/Frameworks/R.framework/Versions/3.5/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/3.5/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+ [1] grid      parallel  stats4    stats     graphics  grDevices utils    
+ [8] datasets  methods   base     
+
+other attached packages:
+ [1] gtools_3.5.0                data.table_1.11.4          
+ [3] ggrepel_0.8.0               VennDiagram_1.6.20         
+ [5] futile.logger_1.4.3         limma_3.36.2               
+ [7] tagcloud_0.6                Rcpp_0.12.17               
+ [9] tmod_0.36                   corrplot_0.84              
+[11] pheatmap_1.0.10             RColorBrewer_1.1-2         
+[13] Rtsne_0.13                  irlba_2.3.2                
+[15] SummarizedExperiment_1.10.1 DelayedArray_0.6.1         
+[17] BiocParallel_1.14.1         matrixStats_0.53.1         
+[19] Biobase_2.40.0              GenomicRanges_1.32.3       
+[21] GenomeInfoDb_1.16.0         IRanges_2.14.10            
+[23] S4Vectors_0.18.3            BiocGenerics_0.26.0        
+[25] leedonghyung_1.0            Seurat_2.3.2               
+[27] Matrix_1.2-14               cowplot_0.9.2              
+[29] ggplot2_2.2.1.9000         
+
+loaded via a namespace (and not attached):
+  [1] reticulate_1.8         R.utils_2.6.0          tidyselect_0.2.4      
+  [4] htmlwidgets_1.2        trimcluster_0.1-2      ranger_0.10.1         
+  [7] munsell_0.4.3          codetools_0.2-15       ica_1.0-2             
+ [10] withr_2.1.2            colorspace_1.3-2       knitr_1.20            
+ [13] rstudioapi_0.7         geometry_0.3-6         ROCR_1.0-7            
+ [16] robustbase_0.93-0      dtw_1.20-1             dimRed_0.1.0          
+ [19] labeling_0.3           lars_1.2               git2r_0.21.0          
+ [22] GenomeInfoDbData_1.1.0 mnormt_1.5-5           bit64_0.9-7           
+ [25] rprojroot_1.3-2        lambda.r_1.2.3         ipred_0.9-6           
+ [28] diptest_0.75-7         R6_2.2.2               VGAM_1.0-5            
+ [31] hdf5r_1.0.0            flexmix_2.3-14         DRR_0.0.3             
+ [34] bitops_1.0-6           assertthat_0.2.0       SDMTools_1.1-221      
+ [37] scales_0.5.0           nnet_7.3-12            beeswarm_0.2.3        
+ [40] gtable_0.2.0           ddalpha_1.3.3          workflowr_1.0.1       
+ [43] timeDate_3043.102      rlang_0.2.1            CVST_0.2-2            
+ [46] scatterplot3d_0.3-41   RcppRoll_0.3.0         splines_3.5.0         
+ [49] lazyeval_0.2.1         ModelMetrics_1.1.0     acepack_1.4.1         
+ [52] plotwidgets_0.4        broom_0.4.4            checkmate_1.8.5       
+ [55] yaml_2.1.19            reshape2_1.4.3         abind_1.4-5           
+ [58] backports_1.1.2        Hmisc_4.1-1            caret_6.0-80          
+ [61] tools_3.5.0            lava_1.6.1             psych_1.8.4           
+ [64] gplots_3.0.1           proxy_0.4-22           ggridges_0.5.0        
+ [67] plyr_1.8.4             base64enc_0.1-3        zlibbioc_1.26.0       
+ [70] purrr_0.2.5            RCurl_1.95-4.10        rpart_4.1-13          
+ [73] pbapply_1.3-4          zoo_1.8-2              sfsmisc_1.1-2         
+ [76] cluster_2.0.7-1        magrittr_1.5           futile.options_1.0.1  
+ [79] lmtest_0.9-36          RANN_2.5.1             mvtnorm_1.0-8         
+ [82] whisker_0.3-2          fitdistrplus_1.0-9     evaluate_0.10.1       
+ [85] XML_3.98-1.11          mclust_5.4             gridExtra_2.3         
+ [88] compiler_3.5.0         tibble_1.4.2           KernSmooth_2.23-15    
+ [91] R.oo_1.22.0            htmltools_0.3.6        segmented_0.5-3.0     
+ [94] Formula_1.2-3          snow_0.4-2             tidyr_0.8.1           
+ [97] tclust_1.4-1           lubridate_1.7.4        formatR_1.5           
+[100] diffusionMap_1.1-0     magic_1.5-8            MASS_7.3-50           
+[103] fpc_2.1-11             R.methodsS3_1.7.1      gdata_2.18.0          
+[106] metap_0.9              bindr_0.1.1            gower_0.1.2           
+[109] igraph_1.2.1           pkgconfig_2.0.1        foreign_0.8-70        
+[112] recipes_0.1.3          foreach_1.4.4          XVector_0.20.0        
+[115] prodlim_2018.04.18     stringr_1.3.1          digest_0.6.15         
+[118] pls_2.6-0              tsne_0.1-3             rmarkdown_1.9         
+[121] htmlTable_1.12         kernlab_0.9-26         modeltools_0.2-21     
+[124] nlme_3.1-137           jsonlite_1.5           bindrcpp_0.2.2        
+[127] pillar_1.2.3           lattice_0.20-35        DEoptimR_1.0-8        
+[130] survival_2.42-3        glue_1.2.0             FNN_1.1               
+[133] png_0.1-7              prabclus_2.2-6         iterators_1.0.9       
+[136] bit_1.1-14             class_7.3-14           stringi_1.2.2         
+[139] mixtools_1.1.0         doSNOW_1.0.16          latticeExtra_0.6-28   
+[142] caTools_1.17.1         dplyr_0.7.5            ape_5.1               </code></pre>
+</div>
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+<hr>
+<p>
+  This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a>
+  analysis was created with
+  <a href="https://github.com/jdblischak/workflowr">workflowr</a> 1.0.1
+</p>
+<hr>
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
