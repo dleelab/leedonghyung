@@ -39,7 +39,7 @@ color.vec <- c("#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "black", "
 ```
 
 ## Filter genes based on over-dispersion
-```{r filter_genes, echo=TRUE, message=FALSE, eval=FALSE}
+```{r filter_genes, echo=TRUE, message=FALSE, eval=TRUE}
 
 path <- ("~/Dropbox/CZI_project/Public_Data/Kang_2017/")
 name <- "Kang.2017.all.cells"
@@ -176,17 +176,17 @@ legend("topleft", levels(Geo_Lib_Cat), border="white", fill=color.vec, bty="n", 
 mod <- model.matrix(~Num_Detected_Genes)
 summ_exp <- SummarizedExperiment(assays = as.matrix(counts.filt))
 pct_cutt <- 1
-iasva.res<- fast_iasva(summ_exp, mod[,-1, drop = F], verbose=TRUE, pct.cutoff = pct_cutt, num.sv = 10)
+iasva.res<- fast_iasva(summ_exp, mod[,-1, drop = F], verbose=FALSE, pct.cutoff = pct_cutt, num.sv = 10)
 # load results
 #iasva.res <- readRDS("/Users/lawlon/Documents/CZI/Seurat_Public_Data/immune_alignment_expression_matrices/IASVA/By_Celltype/Kang.2017.by.cell.CD8 T.IASVA.1.output.Rds")
 iasva.sv <- iasva.res$sv
 #saveRDS(iasva.res, file = paste(name, "IASVA", pct_cutt, "output.Rds", sep = "."))
 #markers_pct1 <- find_markers(Y = summ_exp, iasva.sv = iasva.sv)
-markers_pct1 <- readRDS("/Users/lawlon/Documents/CZI/Seurat_Public_Data/immune_alignment_expression_matrices/IASVA/By_Celltype/Kang.2017.by.cell.CD8 T.IASVA.1.markers.Rds")
+#markers_pct1 <- readRDS("/Users/lawlon/Documents/CZI/Seurat_Public_Data/immune_alignment_expression_matrices/IASVA/By_Celltype/Kang.2017.by.cell.CD8 T.IASVA.1.markers.Rds")
 
 # revised find markers function
-source("/Users/lawlon/iasva_markers_update/R/find_markers.R")
-all_markers <- .GlobalEnv$find_markers(Y = summ_exp, iasva.sv = iasva.sv)
+#source("/Users/lawlon/iasva_markers_update/R/find_markers.R")
+#all_markers <- .GlobalEnv$find_markers(Y = summ_exp, iasva.sv = iasva.sv)
 # all_markers <- readRDS("/Users/lawlon/Documents/CZI/Seurat_Public_Data/immune_alignment_expression_matrices/IASVA/All_Cells/Kang.2017.all.cells.IASVA.by.SV.markers.Rds")
 
 #saveRDS(markers_pct1, file = paste(name, "IASVA", pct_cutt, "markers.Rds", sep = "."))
@@ -334,17 +334,6 @@ for (j in 1:3) {
 
 ```
 
-## Plot All Markers
-```{r plot_markers, echo=TRUE, message=FALSE, fig.width=7, fig.height=7, eval = TRUE}
-anno.col <- data.frame(Condition = Condition, Genes_Detect = Geo_Lib_Cat, CellType = CellType)
-rownames(anno.col) <- colnames(markers_pct1)
-# how many markers are there
-dim(markers_pct1)
-pheatmap(log(markers_pct1+1), show_colnames = FALSE, show_rownames = TRUE,
-         clustering_method = "ward.D2", fontsize_row = 10,
-         annotation_col = anno.col)
-
-```
 
 ## Differential Expression Analysis
 ```{r diff_exp, echo=TRUE, message=FALSE}
