@@ -11,7 +11,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-## Load packages and data
+## Load packages
 ```{r load_packages, echo=TRUE, message=FALSE}
 rm(list = ls())
 library(Seurat)
@@ -29,9 +29,21 @@ library(VennDiagram)
 library(ggrepel)
 library(data.table)
 
+# normalize function
+normalize <- function (counts) 
+{
+  normfactor <- colSums(counts)
+  return(t(t(counts)/normfactor)*median(normfactor))
+}
+color.vec <- c("#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "black", "#a65628", "#f781bf", "#999999")
+```
+
+## Filter genes based on over-dispersion
+```{r filter_genes, echo=TRUE, message=FALSE, eval=FALSE}
+
 path <- ("~/Dropbox/CZI_project/Public_Data/Kang_2017/")
 name <- "Kang.2017.all.cells"
-pct_cutt <- 1
+
 ctrl.data <- as.data.frame(fread(paste0("gzcat ", path,"immune_control_expression_matrix.txt.gz")))
 dim(ctrl.data)
 rownames(ctrl.data) <- ctrl.data$V1
@@ -46,17 +58,6 @@ stim.data$V1 <- NULL
 dim(stim.data)
 #head(stim.data[,1:5])
 
-# normalize function
-normalize <- function (counts) 
-{
-  normfactor <- colSums(counts)
-  return(t(t(counts)/normfactor)*median(normfactor))
-}
-color.vec <- c("#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "black", "#a65628", "#f781bf", "#999999")
-```
-
-## Filter genes based on over-dispersion
-```{r filter_genes, echo=TRUE, message=FALSE, eval=FALSE}
 # Set up control object
 ctrl <- CreateSeuratObject(raw.data = ctrl.data, project = "IMMUNE_CTRL", min.cells = 5)
 ctrl@meta.data$stim <- "CTRL"
@@ -90,11 +91,11 @@ dim(all.counts)
 ## Genes Detected
 ```{r filter_data, echo=TRUE, message=FALSE, fig.width=7, fig.height=7}
 # load data
-all.counts <- readRDS("/Users/lawlon/Documents/CZI/Seurat_Public_Data/immune_alignment_expression_matrices/IASVA/By_Celltype/Kang.2017.by.cell.CD8 T.overdispersed_raw_counts.Rds")
+all.counts <- readRDS("~/Dropbox/Kang.2017/IASVA/By_Celltype/Kang.2017.by.cell.CD8 T.overdispersed_raw_counts.Rds")
 dim(all.counts)
 
 # load in seurat annotations
-imm.comb <- readRDS("/Users/lawlon/Documents/CZI/Seurat_Public_Data/immune_alignment_expression_matrices/Seurat/Kang.2017.PBMC.stimulated.Seurat.immune.combined.Rds")
+imm.comb <- readRDS("~/Dropbox/Kang.2017/Kang.2017.PBMC.stimulated.Seurat.immune.combined.Rds")
 imm.meta <- imm.comb@meta.data
 imm.meta <- cbind(imm.meta, imm.comb@ident)
 colnames(imm.meta)[ncol(imm.meta)] <- "celltype"
@@ -124,6 +125,7 @@ CellType <- factor(imm.meta$celltype)
 # normalize counts
 counts.filt <- normalize(all.counts)
 Geo_Lib <- colSums(log(counts.filt+1))
+Num_Detected_Genes <- colSums(all.counts > 0)
 # categorize lib size
 Geo_Lib_Cat <- cut(Num_Detected_Genes, breaks = 4)
 summary(Geo_Lib)
@@ -133,45 +135,50 @@ lcounts <- as.matrix(lcounts)
 # PC1 and Geometric library size correlation
 pc1 = irlba(lcounts - rowMeans(lcounts), 1)$v[,1] ## partial SVD
 cor(Geo_Lib, pc1)
+cor(Num_Detected_Genes, pc1)
+cor(as.numeric(Condition), pc1)
+cor(Num_Detected_Genes, Geo_Lib)
 ```
 
 ## T-SNE prior to IASVA analysis
-```{r run_pre_tsne, echo=TRUE, message=FALSE, fig.width=7, fig.height=7}
+```{r run_pre_tsne, echo=TRUE, message=FALSE, fig.width=8, fig.height=8}
 #tsne.res <- Rtsne(unique(t(lcounts)), dims = 2)
 #saveRDS(tsne.res, file = paste(name, "tsne.preIASVA.Rds", sep = "."))
 
 # load tsne results
-tsne.res <- readRDS("/Users/lawlon/Documents/CZI/Seurat_Public_Data/immune_alignment_expression_matrices/IASVA/By_Celltype/Kang.2017.by.cell.CD8 T.tsne.preIASVA.Rds")
+tsne.res <- readRDS("~/Dropbox/Kang.2017/IASVA/By_Celltype/Kang.2017.by.cell.CD8 T.tsne.preIASVA.Rds")
 
 # by celltype
-par(mar=c(5.1, 4.1, 4.1, 8.1), xpd=TRUE)
+par(mfrow=c(2,2))
+#par(mar=c(5.1, 4.1, 4.1, 8.1), xpd=TRUE)
 plot(tsne.res$Y[,1:2], main="Pre IA-SVA", xlab="tSNE Dim1",
      ylab="tSNE Dim2", pch=20, col=color.vec[CellType], 
      bg=color.vec[CellType], cex = 0.5)
-par(xpd=TRUE)
+#par(xpd=TRUE)
 legend(50,20, levels(CellType), border="white", fill=color.vec, bty="n", title = "Cell Type")
 # by condition
-par(mar=c(5, 4, 4, 2), xpd=FALSE)
+#par(mar=c(5, 4, 4, 2), xpd=FALSE)
 plot(tsne.res$Y[,1:2], main="Pre IA-SVA", xlab="tSNE Dim1",
      ylab="tSNE Dim2", pch=20, col=color.vec[Condition], 
      bg=color.vec[Condition], oma=c(4,4,6,12), cex = 0.5)
-legend("topright", levels(Condition), border="white", fill=color.vec, bty="n", title = "Condition")
+legend("topleft", levels(Condition), border="white", fill=color.vec, bty="n", title = "Condition")
 # by genes detect
 plot(tsne.res$Y[,1:2], main="Pre IA-SVA", xlab="tSNE Dim1",
      ylab="tSNE Dim2", pch=20, col=color.vec[Geo_Lib_Cat], 
      bg=color.vec[Geo_Lib_Cat], oma=c(4,4,6,12), cex = 0.5)
-legend("topright", levels(Geo_Lib_Cat), border="white", fill=color.vec, bty="n", title = "Genes Detected")
+legend("topleft", levels(Geo_Lib_Cat), border="white", fill=color.vec, bty="n", title = "Genes Detected")
 
 ```
 
 ## Run IASVA using num.sv = 10
-```{r run_iasva, echo=TRUE, message=FALSE}
+```{r run_iasva, echo=TRUE, message=TRUE}
 # run iasva
-mod <- model.matrix(~Geo_Lib)
+mod <- model.matrix(~Num_Detected_Genes)
 summ_exp <- SummarizedExperiment(assays = as.matrix(counts.filt))
-# iasva.res<- fast_iasva(summ_exp, mod[,-1, drop = F], verbose=FALSE, pct.cutoff = pct_cutt, num.sv = 10)
+pct_cutt <- 1
+iasva.res<- fast_iasva(summ_exp, mod[,-1, drop = F], verbose=TRUE, pct.cutoff = pct_cutt, num.sv = 10)
 # load results
-iasva.res <- readRDS("/Users/lawlon/Documents/CZI/Seurat_Public_Data/immune_alignment_expression_matrices/IASVA/By_Celltype/Kang.2017.by.cell.CD8 T.IASVA.1.output.Rds")
+#iasva.res <- readRDS("/Users/lawlon/Documents/CZI/Seurat_Public_Data/immune_alignment_expression_matrices/IASVA/By_Celltype/Kang.2017.by.cell.CD8 T.IASVA.1.output.Rds")
 iasva.sv <- iasva.res$sv
 #saveRDS(iasva.res, file = paste(name, "IASVA", pct_cutt, "output.Rds", sep = "."))
 #markers_pct1 <- find_markers(Y = summ_exp, iasva.sv = iasva.sv)
@@ -209,19 +216,15 @@ ncol(iasva.sv)
 #   legend("right", levels(Geo_Lib_Cat), border="white", fill=color.vec, bty="n")
 # } else {
   par(mar=c(5.1, 4.1, 4.1, 8.2), xpd=TRUE)
-  pairs(iasva.sv, main="IA-SVA", pch=20, col=color.vec[CellType],
-      bg=color.vec[CellType], cex=0.5, oma=c(4,4,6,12))
-  legend(0.85,0.5, levels(CellType), border="white", fill=color.vec, bty="n")
   pairs(iasva.sv, main="IA-SVA", pch=20, col=color.vec[Condition],
       bg=color.vec[Condition], cex=0.5, oma=c(4,4,6,12))
   legend("right", levels(Condition), border="white", fill=color.vec, bty="n")
-  pairs(iasva.sv, main="IA-SVA", pch=20, col=color.vec[Geo_Lib_Cat],
-      bg=color.vec[Geo_Lib_Cat], cex=0.5, oma=c(4,4,6,12))
-  legend("right", levels(Geo_Lib_Cat), border="white", fill=color.vec, bty="n", title = "Genes Detected")
+
   
 # }
 
 ```
+Use SVs separate cells. For example, SV1, SV4, SV8 are good candidates for further analysis.
 
 ## Correlate SVS
 ```{r corr_svs, echo=TRUE, message=FALSE, fig.width=7, fig.height=7}
@@ -230,8 +233,77 @@ corrplot(cor(iasva_vars))
 
 ```
 
+## Marker genes for SV1
+```{r SV1_markers, echo=TRUE, fig.height=5, fig.width=8}
+
+SV1.marker.counts <- leedonghyung::find_markers(summ_exp, as.matrix(iasva.sv[,1]), rsq.cutoff=0.2)
+dim(SV1.marker.counts)
+
+anno.col <- data.frame(Condition = Condition, Genes_Detect = Geo_Lib_Cat, #CellType = CellType, 
+                       SV1 = iasva.sv[,1]) #SV4= iasva.sv[,4])
+rownames(anno.col) <- colnames(SV1.marker.counts)
+
+pheatmap(log(SV1.marker.counts+1), show_colnames =FALSE, 
+         clustering_method = "ward.D2",cutree_cols = 3,annotation_col = anno.col)
+         #annotation_colors = anno.colors)
+
+```
+
+## Marker genes for SV4
+```{r SV4_markers, echo=TRUE, fig.height=4, fig.width=8}
+
+SV4.marker.counts <- leedonghyung::find_markers(summ_exp, as.matrix(iasva.sv[,4]), rsq.cutoff=0.2)
+dim(SV4.marker.counts)
+
+anno.col <- data.frame(Condition = Condition, Genes_Detect = Geo_Lib_Cat, #CellType = CellType, 
+                       SV4 = iasva.sv[,4]) 
+rownames(anno.col) <- colnames(SV4.marker.counts)
+
+pheatmap(log(SV4.marker.counts+1), show_colnames =FALSE, 
+         clustering_method = "ward.D2",cutree_cols = 3,annotation_col = anno.col)
+         #annotation_colors = anno.colors)
+
+```
+
+## Marker genes for SV8
+```{r SV8_markers, echo=TRUE, fig.height=2.1, fig.width=8}
+
+SV8.marker.counts <- leedonghyung::find_markers(summ_exp, as.matrix(iasva.sv[,8]), rsq.cutoff=0.1)
+dim(SV8.marker.counts)
+
+anno.col <- data.frame(Condition = Condition, Genes_Detect = Geo_Lib_Cat, #CellType = CellType, 
+                       SV8 = iasva.sv[,8]) 
+rownames(anno.col) <- colnames(SV8.marker.counts)
+
+pheatmap(log(SV8.marker.counts+1), show_colnames =FALSE, 
+         clustering_method = "ward.D2",cutree_cols = 3,annotation_col = anno.col)
+         #annotation_colors = anno.colors)
+
+```
+
+## Marker genes for SV1 and SV4
+```{r SV1SV4_markers, echo=TRUE, fig.height=8, fig.width=8}
+
+SV1.SV4.marker.counts <- leedonghyung::find_markers(summ_exp, iasva.sv[,c(1,4)], rsq.cutoff=0.2)
+dim(SV1.SV4.marker.counts)
+
+anno.col <- data.frame(Condition = Condition, Genes_Detect = Geo_Lib_Cat, #CellType = CellType, 
+                       SV1 = iasva.sv[,1], SV4= iasva.sv[,4])
+rownames(anno.col) <- colnames(SV1.SV4.marker.counts)
+
+pheatmap(log(SV1.SV4.marker.counts+1), show_colnames =FALSE, 
+         clustering_method = "ward.D2",cutree_cols = 3,annotation_col = anno.col)
+         #annotation_colors = anno.colors)
+
+```
+
+
+
 ## Modules enriched in each SV
-```{r modules, echo=TRUE, message=FALSE, fig.width=9, fig.height=9}
+```{r modules, echo=TRUE, message=FALSE, fig.width=8, fig.height=8}
+
+all_markers <- find_markers2(summ_exp, iasva.sv[,c(1,4,8)], rsq.cutoff=0.1)
+
 design <- model.matrix(~Condition)
 fit <- eBayes(lmFit(counts.filt, design))
 tt <- topTable(fit, coef=2, number=Inf, genelist = rownames(counts.filt))
@@ -239,8 +311,8 @@ head(tt, 10)
 
 # iterative analysis of SVs an modules
 all_sv_res <- list()
-par(mfrow = c(4,2), mar = c(4,2,2,2))
-for (j in 1:ncol(iasva.sv)) {
+par(mfrow = c(3,1), mar = c(4,2,2,2))
+for (j in 1:3) {
     sv_genes <- all_markers[[j]]
     # module analysis
     fg <- tt[sv_genes,]
@@ -274,34 +346,16 @@ pheatmap(log(markers_pct1+1), show_colnames = FALSE, show_rownames = TRUE,
 
 ```
 
-## TSNE using IASVA Marker genes (by genes detected)
-```{r tsne_gene_detect, echo=TRUE, fig.width=7, fig.height=7}
-# load results
-tsne.res.iasva <- readRDS("/Users/lawlon/Documents/CZI/Seurat_Public_Data/immune_alignment_expression_matrices/IASVA/By_Celltype/Kang.2017.by.cell.CD8 T.IASVA.1.tsne.markers.Rds")
-par(mfrow = c(1,1))
-par(mar=c(5.1, 4.1, 4.1, 8.2), xpd=TRUE)
-plot(tsne.res.iasva$Y[,1:2], main="IA-SVA", xlab="tSNE Dim1",
-     ylab="tSNE Dim2", pch=20, col=color.vec[CellType], 
-     bg=color.vec[CellType], oma=c(4,4,6,12), cex = 0.5)
-legend(40, 20, levels(CellType), border="white", fill=color.vec, bty="n")
-par(mar=c(5, 4, 4, 2), xpd=FALSE)
-plot(tsne.res.iasva$Y[,1:2], main="IA-SVA", xlab="tSNE Dim1",
-     ylab="tSNE Dim2", pch=20, col=color.vec[Geo_Lib_Cat], 
-     bg=color.vec[Geo_Lib_Cat], oma=c(4,4,6,12), cex = 0.5)
-legend("topright", levels(Geo_Lib_Cat), border="white", fill=color.vec, bty="n", title = "Genes Detected")
-plot(tsne.res.iasva$Y[,1:2], main="IA-SVA", xlab="tSNE Dim1",
-     ylab="tSNE Dim2", pch=20, col=color.vec[Condition], 
-     bg=color.vec[Condition], oma=c(4,4,6,12), cex = 0.5)
-legend("topright", levels(Condition), border="white", fill=color.vec, bty="n")
-
-```
-
 ## Differential Expression Analysis
 ```{r diff_exp, echo=TRUE, message=FALSE}
 # create seurat object
 cd8_norm <- imm.meta[imm.meta$celltype == "CD8 T" & imm.meta$stim == "CTRL",]
 cd8_stim <- imm.meta[imm.meta$celltype == "CD8 T" & imm.meta$stim == "STIM",]
-all.counts.raw <- cbind(ctrl.data[, rownames(cd8_norm)], stim.data[, rownames(cd8_stim)])
+
+cd8.norm.ids <- gsub("\\.","-",rownames(cd8_norm))
+cd8.stim.ids <- gsub("\\.","-",rownames(cd8_stim))
+
+all.counts.raw <- cbind(ctrl.data[, cd8.norm.ids], stim.data[, cd8.stim.ids])
 all.anns <- rbind(cd8_norm, cd8_stim)
 all_dat <- CreateSeuratObject(raw.data = all.counts.raw, min.cells = 5, project = "CD8_Cells")
 all_dat@meta.data$Stim <- all.anns$stim
@@ -312,13 +366,18 @@ all_dat <- SetAllIdent(object = all_dat, id = "Stim")
 stim_dge <- FindMarkers(object = all_dat, ident.1 = "STIM", ident.2 = "CTRL")
 stim_dge_sig_up <- stim_dge[stim_dge$p_val_adj < 0.05 & stim_dge$avg_logFC > 0,]
 stim_dge_sig_dw <- stim_dge[stim_dge$p_val_adj < 0.05 & stim_dge$avg_logFC < 0,]
+
+## find markers based on raw data.
+summ_exp_raw <- SummarizedExperiment(assays = as.matrix(all.counts.raw))
+all_markers_diff <- find_markers2(summ_exp_raw, as.matrix(iasva.sv[,c(1)]), rsq.cutoff=0.1) ## For fair comparison.
+sv1_genes <- all_markers_diff$All_Unique_Markers
+length(sv1_genes)
 # venn diagram of iasva markers
 library(gtools)
 # calc fold change of iasva markers (SV1)
-sv1_genes <- all_markers$SV1
 dat_norm <- as.matrix(all_dat@data)
-dat_norm_ctrl <- dat_norm[, rownames(cd8_norm)]
-dat_norm_stim <- dat_norm[, rownames(cd8_stim)]
+dat_norm_ctrl <- dat_norm[, cd8.norm.ids]
+dat_norm_stim <- dat_norm[, cd8.stim.ids]
 sv1_fc <- NULL
 for (k in 1:length(sv1_genes)) {
   fcs <- foldchange(num = mean(dat_norm_stim[sv1_genes[k],]), denom = mean(dat_norm_ctrl[sv1_genes[k],]))
