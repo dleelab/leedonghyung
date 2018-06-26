@@ -8,7 +8,7 @@ output:
 
 ## Iteratively Adjusted Surrogate Variable Analysis (IASVA)
 * [IASVA of CD8 T cells (Kang 2017) with Modules](Analyze.PBMCs.CD8.T.iasva.html)
-
+* [IASVA2 of CD8 T cells (Kang 2017) with Modules](Analyze.PBMCs.CD8.T.iasva2.html) Here we used a version of IA-SVA (iasva2) using residuals as dependent variables in each iteration. 
 
 ## Principal Variance Component Analysis (PVCA)
 * [PVCA Test](pvca.test.html)
